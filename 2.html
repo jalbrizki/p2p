@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebRTC Multi Peer Connect</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    color: #222;
+}
+
+.container {
+    width: 100%;
+    max-width: 700px;
+    margin: auto;
+    padding: 15px;
+}
+
+h1 {
+    font-size: 22px;
+    text-align: center;
+    margin: 10px 0 18px;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 7px;
+}
+
+input,
+textarea {
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+    outline: none;
+}
+
+textarea {
+    min-height: 130px;
+    resize: vertical;
+}
+
+button {
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-weight: bold;
+    margin: 4px 2px;
+}
+
+.btn-primary {
+    background: #1677ff;
+    color: white;
+}
+
+.btn-secondary {
+    background: #e9ecef;
+    color: #222;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-success {
+    background: #198754;
+    color: white;
+}
+
+.status {
+    padding: 10px;
+    border-radius: 8px;
+    background: #f0f2f5;
+    margin-top: 10px;
+    font-size: 13px;
+}
+
+.myid {
+    font-size: 25px;
+    font-weight: bold;
+    text-align: center;
+    letter-spacing: 3px;
+    padding: 10px;
+    background: #f0f7ff;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.peer-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.peer {
+    padding: 9px 10px;
+    background: #f4f4f4;
+    border-radius: 7px;
+    font-size: 13px;
+}
+
+.peer.online {
+    background: #e8f8ee;
+}
+
+.chat-box {
+    height: 300px;
+    overflow-y: auto;
+    background: #f5f5f5;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.message {
+    background: white;
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin-bottom: 7px;
+    word-wrap: break-word;
+}
+
+.message .meta {
+    font-size: 10px;
+    color: #888;
+    margin-bottom: 3px;
+}
+
+.chat-input {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.chat-input input {
+    flex: 1;
+}
+
+.small {
+    font-size: 11px;
+    color: #777;
+}
+
+.warning {
+    background: #fff3cd;
+    color: #856404;
+    padding: 9px;
+    border-radius: 8px;
+    font-size: 12px;
+    margin-top: 8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🌐 WebRTC Multi Peer Connect</h1>
+
+    <!-- IDENTITAS -->
+    <div class="card">
+        <label>ID Anda</label>
+
+        <div class="myid" id="myID"></div>
+
+        <div class="small">
+            ID ini disimpan di perangkat dan tidak berubah ketika halaman di-refresh.
+        </div>
+
+        <button class="btn-danger" onclick="resetData()">
+            ♻️ RESET DATA
+        </button>
+    </div>
+
+    <!-- SESSION -->
+    <div class="card">
+
+        <label>Session / Signaling Data</label>
+
+        <textarea
+            id="session"
+            placeholder="Session offer / answer akan muncul di sini..."
+            oninput="saveSession()"
+        ></textarea>
+
+        <div>
+            <button class="btn-secondary" onclick="copySession()">
+                📋 COPY
+            </button>
+
+            <button class="btn-secondary" onclick="pasteSession()">
+                📥 PASTE
+            </button>
+
+            <button class="btn-secondary" onclick="clearSession()">
+                🗑 HAPUS
+            </button>
+
+            <button class="btn-secondary" onclick="selectSession()">
+                SELECT SEMUA
+            </button>
+
+            <button class="btn-primary" onclick="connectSession()">
+                🔗 CONNECT
+            </button>
+        </div>
+
+        <div class="warning">
+            Session tersimpan secara lokal. Namun koneksi WebRTC aktif tidak dapat
+            disimpan ketika browser di-refresh.
+        </div>
+
+    </div>
+
+    <!-- STATUS -->
+    <div class="card">
+        <label>Status</label>
+        <div class="status" id="status">
+            Menunggu koneksi...
+        </div>
+    </div>
+
+    <!-- PEERS -->
+    <div class="card">
+
+        <label>Peers</label>
+
+        <div id="peers" class="peer-list">
+            Belum ada peer.
+        </div>
+
+    </div>
+
+    <!-- CHAT -->
+    <div class="card">
+
+        <label>Chat</label>
+
+        <div id="chatBox" class="chat-box"></div>
+
+        <div class="chat-input">
+            <input
+                type="text"
+                id="message"
+                placeholder="Tulis pesan..."
+                autocomplete="off"
+            >
+
+            <button class="btn-success" onclick="broadcast()">
+                KIRIM
+            </button>
+        </div>
+
+        <button class="btn-secondary" onclick="clearChat()">
+            🗑 Hapus Riwayat Chat
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+
+const STORAGE = {
+    ID: "webrtc_p2p_myID",
+    SESSION: "webrtc_p2p_session",
+    CHAT: "webrtc_p2p_chat",
+    PEERS: "webrtc_p2p_peers"
+};
+
+
+/* =========================================================
+   ID PERSISTEN
+========================================================= */
+
+let myID = localStorage.getItem(STORAGE.ID);
+
+if (!myID) {
+    myID = crypto.randomUUID()
+        .replace(/-/g, "")
+        .substring(0, 6)
+        .toUpperCase();
+
+    localStorage.setItem(STORAGE.ID, myID);
+}
+
+document.getElementById("myID").textContent = myID;
+
+
+/* =========================================================
+   DATA PEER
+========================================================= */
+
+let connections = {};
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function showStatus(text) {
+    document.getElementById("status").textContent = text;
+}
+
+
+/* =========================================================
+   SESSION LOCAL STORAGE
+========================================================= */
+
+function saveSession() {
+    const value = document.getElementById("session").value;
+
+    if (value.trim()) {
+        localStorage.setItem(STORAGE.SESSION, value);
+    } else {
+        localStorage.removeItem(STORAGE.SESSION);
+    }
+}
+
+
+function restoreSession() {
+
+    const saved = localStorage.getItem(STORAGE.SESSION);
+
+    if (saved) {
+        document.getElementById("session").value = saved;
+    }
+}
+
+
+/* =========================================================
+   PEER HISTORY
+========================================================= */
+
+function savePeerHistory() {
+
+    const ids = Object.keys(connections);
+
+    localStorage.setItem(
+        STORAGE.PEERS,
+        JSON.stringify(ids)
+    );
+}
+
+
+function getPeerHistory() {
+
+    try {
+
+        const data = localStorage.getItem(STORAGE.PEERS);
+
+        if (!data) {
+            return [];
+        }
+
+        const parsed = JSON.parse(data);
+
+        return Array.isArray(parsed) ? parsed : [];
+
+    } catch (e) {
+
+        return [];
+
+    }
+}
+
+
+/* =========================================================
+   UPDATE PEERS
+========================================================= */
+
+function updatePeers() {
+
+    const box = document.getElementById("peers");
+
+    const ids = Object.keys(connections);
+
+    if (!ids.length) {
+
+        const history = getPeerHistory();
+
+        if (history.length) {
+
+            box.innerHTML = history.map(id => {
+
+                return `
+                    <div class="peer">
+                        ${escapeHTML(id)}
+                        <span class="small">
+                            (riwayat, belum tersambung)
+                        </span>
+                    </div>
+                `;
+
+            }).join("");
+
+        } else {
+
+            box.textContent = "Belum ada peer.";
+
+        }
+
+        return;
+    }
+
+
+    box.innerHTML = ids.map(id => {
+
+        const item = connections[id];
+
+        const online =
+            item.channel &&
+            item.channel.readyState === "open";
+
+        return `
+            <div class="peer ${online ? "online" : ""}">
+                ${escapeHTML(id)}
+                —
+                ${online ? "🟢 ONLINE" : "⚪ CONNECTING/OFFLINE"}
+            </div>
+        `;
+
+    }).join("");
+
+    savePeerHistory();
+}
+
+
+/* =========================================================
+   CREATE PEER
+========================================================= */
+
+function createPeer(id) {
+
+    if (connections[id]) {
+
+        return connections[id];
+
+    }
+
+    const pc = new RTCPeerConnection({
+
+        iceServers: [
+            {
+                urls: "stun:stun.l.google.com:19302"
+            }
+        ]
+
+    });
+
+
+    connections[id] = {
+        pc: pc,
+        channel: null
+    };
+
+
+    pc.onconnectionstatechange = function() {
+
+        const state = pc.connectionState;
+
+        showStatus(
+            "Peer " + id + ": " + state
+        );
+
+        updatePeers();
+
+    };
+
+
+    pc.ondatachannel = function(event) {
+
+        setupChannel(
+            id,
+            event.channel
+        );
+
+    };
+
+
+    updatePeers();
+
+    return connections[id];
+}
+
+
+/* =========================================================
+   SETUP DATA CHANNEL
+========================================================= */
+
+function setupChannel(id, channel) {
+
+    if (!connections[id]) {
+
+        connections[id] = {
+            pc: null,
+            channel: null
+        };
+
+    }
+
+    connections[id].channel = channel;
+
+
+    channel.onopen = function() {
+
+        showStatus(
+            "Terhubung dengan peer " + id
+        );
+
+        updatePeers();
+
+    };
+
+
+    channel.onclose = function() {
+
+        showStatus(
+            "Koneksi dengan " + id + " ditutup"
+        );
+
+        updatePeers();
+
+    };
+
+
+    channel.onerror = function() {
+
+        showStatus(
+            "Error koneksi dengan " + id
+        );
+
+    };
+
+
+    channel.onmessage = function(event) {
+
+        try {
+
+            const data = JSON.parse(event.data);
+
+            if (data.type === "chat") {
+
+                addChatMessage(
+                    data.from,
+                    data.time,
+                    data.message,
+                    true
+                );
+
+            }
+
+        } catch (e) {
+
+            console.error(
+                "Data tidak valid:",
+                e
+            );
+
+        }
+
+    };
+
+    updatePeers();
+}
+
+
+/* =========================================================
+   CONNECT SESSION
+========================================================= */
+
+async function connectSession() {
+
+    const textarea =
+        document.getElementById("session");
+
+    const text =
+        textarea.value.trim();
+
+
+    try {
+
+        /* =========================================
+           BUAT OFFER
+        ========================================= */
+
+        if (!text) {
+
+            const tempID =
+                "TMP_" + Date.now();
+
+            const peer =
+                createPeer(tempID);
+
+            const channel =
+                peer.pc.createDataChannel("chat");
+
+            setupChannel(
+                tempID,
+                channel
+            );
+
+
+            const offer =
+                await peer.pc.createOffer();
+
+            await peer.pc.setLocalDescription(
+                offer
+            );
+
+
+            showStatus(
+                "Menunggu ICE candidate..."
+            );
+
+            await waitICE(peer.pc);
+
+
+            const session = {
+
+                type: "offer",
+
+                from: myID,
+
+                sdp: peer.pc.localDescription
+
+            };
+
+
+            textarea.value =
+                JSON.stringify(
+                    session,
+                    null,
+                    2
+                );
+
+
+            saveSession();
+
+            showStatus(
+                "Offer dibuat. Kirim session ini ke peer."
+            );
+
+            return;
+        }
+
+
+        const data =
+            JSON.parse(text);
+
+
+        /* =========================================
+           TERIMA OFFER
+        ========================================= */
+
+        if (data.type === "offer") {
+
+            const remoteID =
+                data.from;
+
+            const peer =
+                createPeer(remoteID);
+
+
+            await peer.pc.setRemoteDescription(
+                new RTCSessionDescription(
+                    data.sdp
+                )
+            );
+
+
+            const answer =
+                await peer.pc.createAnswer();
+
+            await peer.pc.setLocalDescription(
+                answer
+            );
+
+
+            showStatus(
+                "Menunggu ICE candidate..."
+            );
+
+            await waitICE(peer.pc);
+
+
+            const session = {
+
+                type: "answer",
+
+                from: myID,
+
+                to: remoteID,
+
+                sdp: peer.pc.localDescription
+
+            };
+
+
+            textarea.value =
+                JSON.stringify(
+                    session,
+                    null,
+                    2
+                );
+
+
+            saveSession();
+
+            showStatus(
+                "Answer dibuat. Kirim kembali ke pembuat offer."
+            );
+
+            return;
+        }
+
+
+        /* =========================================
+           TERIMA ANSWER
+        ========================================= */
+
+        if (data.type === "answer") {
+
+            const remoteID =
+                data.from;
+
+
+            let tempID = null;
+
+            for (
+                const id in connections
+            ) {
+
+                if (
+                    id.startsWith("TMP_")
+                ) {
+
+                    tempID = id;
+
+                    break;
+
+                }
+
+            }
+
+
+            if (!tempID) {
+
+                showStatus(
+                    "Peer sementara tidak ditemukan."
+                );
+
+                return;
+
+            }
+
+
+            const peer =
+                connections[tempID];
+
+
+            await peer.pc.setRemoteDescription(
+                new RTCSessionDescription(
+                    data.sdp
+                )
+            );
+
+
+            connections[remoteID] =
+                connections[tempID];
+
+
+            delete connections[tempID];
+
+
+            updatePeers();
+
+            savePeerHistory();
+
+            saveSession();
+
+
+            showStatus(
+                "Answer diterima. Menunggu koneksi..."
+            );
+
+            return;
+        }
+
+
+        showStatus(
+            "Format session tidak dikenali."
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+        showStatus(
+            "Error: " + error.message
+        );
+
+    }
+}
+
+
+/* =========================================================
+   WAIT ICE
+========================================================= */
+
+function waitICE(pc) {
+
+    return new Promise(resolve => {
+
+        if (
+            pc.iceGatheringState ===
+            "complete"
+        ) {
+
+            resolve();
+
+            return;
+
+        }
+
+
+        function check() {
+
+            if (
+                pc.iceGatheringState ===
+                "complete"
+            ) {
+
+                pc.removeEventListener(
+                    "icegatheringstatechange",
+                    check
+                );
+
+                resolve();
+
+            }
+
+        }
+
+
+        pc.addEventListener(
+            "icegatheringstatechange",
+            check
+        );
+
+
+        setTimeout(
+            resolve,
+            10000
+        );
+
+    });
+
+}
+
+
+/* =========================================================
+   BROADCAST CHAT
+========================================================= */
+
+function broadcast() {
+
+    const input =
+        document.getElementById("message");
+
+    const message =
+        input.value.trim();
+
+
+    if (!message) {
+        return;
+    }
+
+
+    const data = {
+
+        type: "chat",
+
+        from: myID,
+
+        time: new Date().toLocaleTimeString(
+            "id-ID",
+            {
+                hour: "2-digit",
+                minute: "2-digit"
+            }
+        ),
+
+        message: message
+
+    };
+
+
+    let sent = false;
+
+
+    Object.keys(connections)
+        .forEach(id => {
+
+            const channel =
+                connections[id].channel;
+
+            if (
+                channel &&
+                channel.readyState === "open"
+            ) {
+
+                channel.send(
+                    JSON.stringify(data)
+                );
+
+                sent = true;
+
+            }
+
+        });
+
+
+    /* Tampilkan pesan sendiri */
+    addChatMessage(
+        myID,
+        data.time,
+        message,
+        false
+    );
+
+
+    input.value = "";
+
+
+    if (!sent) {
+
+        showStatus(
+            "Pesan disimpan lokal, tetapi belum ada peer online."
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   CHAT LOCAL STORAGE
+========================================================= */
+
+function getChatHistory() {
+
+    try {
+
+        const data =
+            localStorage.getItem(
+                STORAGE.CHAT
+            );
+
+        if (!data) {
+            return [];
+        }
+
+        const parsed =
+            JSON.parse(data);
+
+        return Array.isArray(parsed)
+            ? parsed
+            : [];
+
+    } catch (e) {
+
+        return [];
+
+    }
+
+}
+
+
+function saveChatHistory(history) {
+
+    /*
+       Batasi 200 pesan agar localStorage
+       tidak cepat penuh.
+    */
+
+    if (history.length > 200) {
+
+        history =
+            history.slice(-200);
+
+    }
+
+
+    localStorage.setItem(
+        STORAGE.CHAT,
+        JSON.stringify(history)
+    );
+
+}
+
+
+function addChatMessage(
+    from,
+    time,
+    message,
+    incoming
+) {
+
+    const box =
+        document.getElementById(
+            "chatBox"
+        );
+
+
+    const item =
+        document.createElement(
+            "div"
+        );
+
+    item.className =
+        "message";
+
+
+    const meta =
+        document.createElement(
+            "div"
+        );
+
+    meta.className =
+        "meta";
+
+    meta.textContent =
+        from +
+        " • " +
+        time +
+        (
+            incoming
+                ? " • masuk"
+                : " • Anda"
+        );
+
+
+    const content =
+        document.createElement(
+            "div"
+        );
+
+    /*
+       textContent digunakan supaya
+       pesan tidak bisa menyisipkan HTML/JS.
+    */
+
+    content.textContent =
+        message;
+
+
+    item.appendChild(meta);
+
+    item.appendChild(content);
+
+    box.appendChild(item);
+
+
+    box.scrollTop =
+        box.scrollHeight;
+
+
+    /* Simpan lokal */
+
+    const history =
+        getChatHistory();
+
+
+    history.push({
+
+        from: from,
+
+        time: time,
+
+        message: message
+
+    });
+
+
+    saveChatHistory(history);
+
+}
+
+
+/* =========================================================
+   RESTORE CHAT
+========================================================= */
+
+function restoreChat() {
+
+    const history =
+        getChatHistory();
+
+
+    const box =
+        document.getElementById(
+            "chatBox"
+        );
+
+
+    box.innerHTML = "";
+
+
+    history.forEach(item => {
+
+        const message =
+            document.createElement(
+                "div"
+            );
+
+        message.className =
+            "message";
+
+
+        const meta =
+            document.createElement(
+                "div"
+            );
+
+        meta.className =
+            "meta";
+
+        meta.textContent =
+            item.from +
+            " • " +
+            item.time;
+
+
+        const content =
+            document.createElement(
+                "div"
+            );
+
+        content.textContent =
+            item.message;
+
+
+        message.appendChild(meta);
+
+        message.appendChild(content);
+
+        box.appendChild(message);
+
+    });
+
+
+    box.scrollTop =
+        box.scrollHeight;
+
+}
+
+
+/* =========================================================
+   CLEAR CHAT
+========================================================= */
+
+function clearChat() {
+
+    if (
+        !confirm(
+            "Hapus seluruh riwayat chat lokal?"
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    localStorage.removeItem(
+        STORAGE.CHAT
+    );
+
+
+    document.getElementById(
+        "chatBox"
+    ).innerHTML = "";
+
+
+    showStatus(
+        "Riwayat chat lokal telah dihapus."
+    );
+
+}
+
+
+/* =========================================================
+   CLIPBOARD
+========================================================= */
+
+async function copySession() {
+
+    const textarea =
+        document.getElementById(
+            "session"
+        );
+
+
+    if (!textarea.value.trim()) {
+
+        showStatus(
+            "Tidak ada session untuk disalin."
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        await navigator.clipboard.writeText(
+            textarea.value
+        );
+
+        showStatus(
+            "Session berhasil disalin."
+        );
+
+    } catch (e) {
+
+        textarea.select();
+
+        document.execCommand(
+            "copy"
+        );
+
+        showStatus(
+            "Session berhasil disalin."
+        );
+
+    }
+
+}
+
+
+async function pasteSession() {
+
+    try {
+
+        const text =
+            await navigator.clipboard.readText();
+
+
+        document.getElementById(
+            "session"
+        ).value = text;
+
+
+        saveSession();
+
+
+        showStatus(
+            "Session berhasil ditempel."
+        );
+
+    } catch (e) {
+
+        showStatus(
+            "Gagal membaca clipboard. Silakan paste manual."
+        );
+
+    }
+
+}
+
+
+function clearSession() {
+
+    document.getElementById(
+        "session"
+    ).value = "";
+
+
+    localStorage.removeItem(
+        STORAGE.SESSION
+    );
+
+
+    showStatus(
+        "Session lokal telah dihapus."
+    );
+
+}
+
+
+function selectSession() {
+
+    const textarea =
+        document.getElementById(
+            "session"
+        );
+
+    textarea.focus();
+
+    textarea.select();
+
+}
+
+
+/* =========================================================
+   RESET SEMUA DATA
+========================================================= */
+
+function resetData() {
+
+    const yakin =
+        confirm(
+            "RESET SEMUA DATA?\n\n" +
+            "Data berikut akan dihapus:\n" +
+            "• ID perangkat\n" +
+            "• Session\n" +
+            "• Riwayat peer\n" +
+            "• Riwayat chat\n\n" +
+            "Setelah reset, ID baru akan dibuat.\n\n" +
+            "Lanjutkan?"
+        );
+
+
+    if (!yakin) {
+        return;
+    }
+
+
+    /*
+       Tutup semua koneksi WebRTC
+       sebelum data dihapus.
+    */
+
+    Object.keys(connections)
+        .forEach(id => {
+
+            try {
+
+                if (
+                    connections[id].channel
+                ) {
+
+                    connections[id]
+                        .channel
+                        .close();
+
+                }
+
+                if (
+                    connections[id].pc
+                ) {
+
+                    connections[id]
+                        .pc
+                        .close();
+
+                }
+
+            } catch (e) {}
+
+        });
+
+
+    connections = {};
+
+
+    /*
+       Hapus semua data aplikasi
+       yang kita buat di localStorage.
+    */
+
+    localStorage.removeItem(
+        STORAGE.ID
+    );
+
+    localStorage.removeItem(
+        STORAGE.SESSION
+    );
+
+    localStorage.removeItem(
+        STORAGE.CHAT
+    );
+
+    localStorage.removeItem(
+        STORAGE.PEERS
+    );
+
+
+    /*
+       Buat ID baru.
+    */
+
+    myID = crypto.randomUUID()
+        .replace(/-/g, "")
+        .substring(0, 6)
+        .toUpperCase();
+
+
+    localStorage.setItem(
+        STORAGE.ID,
+        myID
+    );
+
+
+    /*
+       Bersihkan tampilan.
+    */
+
+    document.getElementById(
+        "myID"
+    ).textContent = myID;
+
+    document.getElementById(
+        "session"
+    ).value = "";
+
+    document.getElementById(
+        "chatBox"
+    ).innerHTML = "";
+
+    document.getElementById(
+        "peers"
+    ).textContent =
+        "Belum ada peer.";
+
+
+    showStatus(
+        "Semua data lokal telah di-reset. ID baru dibuat."
+    );
+
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHTML(text) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+    div.textContent =
+        text;
+
+    return div.innerHTML;
+
+}
+
+
+/* =========================================================
+   ENTER UNTUK KIRIM CHAT
+========================================================= */
+
+document.getElementById(
+    "message"
+).addEventListener(
+    "keydown",
+    function(event) {
+
+        if (
+            event.key === "Enter"
+        ) {
+
+            event.preventDefault();
+
+            broadcast();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   RESTORE DATA SAAT REFRESH
+========================================================= */
+
+function initialize() {
+
+    restoreSession();
+
+    restoreChat();
+
+    updatePeers();
+
+    showStatus(
+        "Data lokal dipulihkan. ID tetap: " +
+        myID
+    );
+
+}
+
+
+/* =========================================================
+   START
+========================================================= */
+
+initialize();
+
+</script>
+
+</body>
+</html>
