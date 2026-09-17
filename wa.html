@@ -1,0 +1,4842 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+
+<title>Messenger P2P</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:#efeae2;
+    color:#111b21;
+}
+
+button,input,textarea{
+    font:inherit;
+}
+
+button{
+    cursor:pointer;
+}
+
+.app{
+    width:100%;
+    height:100dvh;
+    position:relative;
+    overflow:hidden;
+    background:#efeae2;
+}
+
+/* =========================================================
+   HOME
+========================================================= */
+
+.page{
+    position:absolute;
+    inset:0;
+    display:none;
+    flex-direction:column;
+    background:#fff;
+}
+
+.page.active{
+    display:flex;
+}
+
+.topbar{
+    height:60px;
+    min-height:60px;
+    background:#075e54;
+    color:white;
+    display:flex;
+    align-items:center;
+    padding:
+        env(safe-area-inset-top)
+        10px
+        0
+        10px;
+    box-sizing:content-box;
+}
+
+.topbar-title{
+    flex:1;
+    min-width:0;
+}
+
+.topbar-title h1{
+    margin:0;
+    font-size:20px;
+    font-weight:600;
+}
+
+.topbar-title small{
+    display:block;
+    margin-top:2px;
+    font-size:11px;
+    opacity:.8;
+}
+
+.icon-btn{
+    width:42px;
+    height:42px;
+    border:0;
+    background:transparent;
+    color:white;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+}
+
+.icon-btn:active{
+    background:rgba(255,255,255,.15);
+}
+
+/* search */
+
+.search-wrap{
+    padding:8px 10px;
+    background:#075e54;
+}
+
+.search-box{
+    height:40px;
+    background:#fff;
+    border-radius:20px;
+    display:flex;
+    align-items:center;
+    padding:0 14px;
+    color:#667781;
+}
+
+.search-box span{
+    font-size:18px;
+    margin-right:8px;
+}
+
+.search-box input{
+    border:0;
+    outline:0;
+    flex:1;
+    min-width:0;
+    font-size:14px;
+    background:transparent;
+}
+
+/* online connection banner */
+
+.connection-banner{
+    display:none;
+    background:#fff3cd;
+    color:#664d03;
+    padding:8px 14px;
+    font-size:12px;
+    border-bottom:1px solid #eee;
+}
+
+.connection-banner.show{
+    display:block;
+}
+
+/* peer list */
+
+.peer-list{
+    flex:1;
+    overflow-y:auto;
+    background:#fff;
+    -webkit-overflow-scrolling:touch;
+}
+
+.peer-item{
+    height:72px;
+    display:flex;
+    align-items:center;
+    padding:0 12px;
+    border-bottom:1px solid #eee;
+    background:#fff;
+    position:relative;
+}
+
+.peer-item:active{
+    background:#f5f5f5;
+}
+
+.peer-avatar{
+    width:50px;
+    height:50px;
+    min-width:50px;
+    border-radius:50%;
+    background:#dfe5e7;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    color:#54656f;
+    margin-right:12px;
+    position:relative;
+}
+
+.peer-status-dot{
+    width:13px;
+    height:13px;
+    border-radius:50%;
+    position:absolute;
+    right:-1px;
+    bottom:1px;
+    border:2px solid white;
+    background:#9ca3a8;
+}
+
+.peer-status-dot.connected{
+    background:#25d366;
+}
+
+.peer-status-dot.process{
+    background:#f0ad00;
+}
+
+.peer-content{
+    flex:1;
+    min-width:0;
+}
+
+.peer-line{
+    display:flex;
+    align-items:center;
+}
+
+.peer-name{
+    font-size:16px;
+    font-weight:500;
+    flex:1;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+}
+
+.peer-time{
+    font-size:11px;
+    color:#667781;
+    margin-left:8px;
+}
+
+.peer-preview{
+    margin-top:5px;
+    font-size:13px;
+    color:#667781;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.peer-unread{
+    min-width:20px;
+    height:20px;
+    border-radius:10px;
+    background:#25d366;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:11px;
+    padding:0 5px;
+    margin-left:8px;
+}
+
+.empty-state{
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    color:#667781;
+    padding:30px;
+    text-align:center;
+}
+
+.empty-icon{
+    font-size:55px;
+    margin-bottom:15px;
+}
+
+.empty-state h2{
+    margin:0 0 8px;
+    color:#41525d;
+    font-size:20px;
+}
+
+.empty-state p{
+    margin:0;
+    font-size:13px;
+    line-height:1.6;
+}
+
+/* bottom nav */
+
+.bottom-nav{
+    height:58px;
+    min-height:58px;
+    padding-bottom:env(safe-area-inset-bottom);
+    background:#fff;
+    border-top:1px solid #ddd;
+    display:flex;
+}
+
+.nav-btn{
+    flex:1;
+    border:0;
+    background:#fff;
+    color:#667781;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:2px;
+    position:relative;
+}
+
+.nav-btn.active{
+    color:#075e54;
+}
+
+.nav-icon{
+    font-size:20px;
+}
+
+.nav-label{
+    font-size:10px;
+}
+
+.nav-badge{
+    position:absolute;
+    top:5px;
+    margin-left:25px;
+    min-width:17px;
+    height:17px;
+    border-radius:9px;
+    background:#25d366;
+    color:white;
+    font-size:9px;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:0 4px;
+}
+
+/* =========================================================
+   CHAT PAGE
+========================================================= */
+
+.chat-page{
+    background:#efeae2;
+}
+
+.chat-header{
+    background:#075e54;
+    color:#fff;
+    height:60px;
+    min-height:60px;
+    padding-top:env(safe-area-inset-top);
+    box-sizing:content-box;
+    display:flex;
+    align-items:center;
+}
+
+.chat-back{
+    width:42px;
+    height:42px;
+    border:0;
+    background:transparent;
+    color:white;
+    font-size:28px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.chat-avatar{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    background:#dfe5e7;
+    color:#54656f;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-right:9px;
+    font-size:18px;
+}
+
+.chat-user{
+    flex:1;
+    min-width:0;
+}
+
+.chat-user-name{
+    font-size:16px;
+    font-weight:500;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.chat-user-status{
+    font-size:11px;
+    opacity:.85;
+    margin-top:2px;
+}
+
+.chat-menu{
+    width:42px;
+    height:42px;
+    border:0;
+    background:transparent;
+    color:white;
+    font-size:22px;
+}
+
+/* messages */
+
+.messages{
+    flex:1;
+    overflow-y:auto;
+    padding:12px 8px;
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    background-color:#efeae2;
+    background-image:
+        radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);
+    background-size:12px 12px;
+    -webkit-overflow-scrolling:touch;
+}
+
+.chat-info{
+    align-self:center;
+    max-width:90%;
+    background:#fff3c4;
+    color:#68706f;
+    border-radius:8px;
+    padding:7px 10px;
+    font-size:10px;
+    text-align:center;
+    margin:5px 0 12px;
+    box-shadow:0 1px 1px rgba(0,0,0,.05);
+}
+
+.message-row{
+    display:flex;
+    width:100%;
+}
+
+.message-row.out{
+    justify-content:flex-end;
+}
+
+.message-row.in{
+    justify-content:flex-start;
+}
+
+.message-bubble{
+    max-width:82%;
+    padding:7px 9px 5px;
+    border-radius:8px;
+    position:relative;
+    box-shadow:0 1px 1px rgba(0,0,0,.08);
+    font-size:14px;
+    line-height:1.4;
+    word-wrap:break-word;
+    white-space:pre-wrap;
+}
+
+.message-row.in .message-bubble{
+    background:#fff;
+    border-top-left-radius:2px;
+}
+
+.message-row.out .message-bubble{
+    background:#d9fdd3;
+    border-top-right-radius:2px;
+}
+
+.message-meta{
+    float:right;
+    margin-left:8px;
+    margin-top:5px;
+    font-size:9px;
+    color:#667781;
+    white-space:nowrap;
+}
+
+.message-check{
+    color:#53bdeb;
+    font-size:11px;
+}
+
+/* input */
+
+.chat-input-area{
+    min-height:58px;
+    padding:6px 7px;
+    padding-bottom:calc(6px + env(safe-area-inset-bottom));
+    background:#f0f2f5;
+    display:flex;
+    align-items:flex-end;
+    gap:6px;
+}
+
+.attach-btn{
+    width:42px;
+    height:42px;
+    min-width:42px;
+    border:0;
+    background:transparent;
+    color:#54656f;
+    font-size:23px;
+}
+
+.input-box{
+    flex:1;
+    min-height:42px;
+    max-height:110px;
+    background:white;
+    border-radius:21px;
+    display:flex;
+    align-items:center;
+    padding:0 13px;
+}
+
+.input-box textarea{
+    width:100%;
+    max-height:95px;
+    resize:none;
+    border:0;
+    outline:0;
+    font-size:14px;
+    line-height:20px;
+    background:transparent;
+    padding:9px 0;
+}
+
+.send-btn{
+    width:42px;
+    height:42px;
+    min-width:42px;
+    border:0;
+    border-radius:50%;
+    background:#25d366;
+    color:white;
+    font-size:20px;
+}
+
+/* =========================================================
+   REQUEST PAGE
+========================================================= */
+
+.request-page{
+    background:#fff;
+}
+
+.request-list{
+    flex:1;
+    overflow-y:auto;
+}
+
+.request-item{
+    padding:14px;
+    border-bottom:1px solid #eee;
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.request-avatar{
+    width:48px;
+    height:48px;
+    border-radius:50%;
+    background:#dfe5e7;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+}
+
+.request-info{
+    flex:1;
+    min-width:0;
+}
+
+.request-name{
+    font-weight:500;
+    font-size:15px;
+}
+
+.request-desc{
+    color:#667781;
+    font-size:12px;
+    margin-top:3px;
+}
+
+.request-actions{
+    display:flex;
+    gap:6px;
+}
+
+.request-actions button{
+    border:0;
+    border-radius:18px;
+    padding:8px 11px;
+    font-size:11px;
+}
+
+.reject-btn{
+    background:#eee;
+    color:#555;
+}
+
+.accept-btn{
+    background:#25d366;
+    color:white;
+}
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+
+.settings-page{
+    background:#f5f6f6;
+}
+
+.settings-scroll{
+    flex:1;
+    overflow-y:auto;
+}
+
+.profile-card{
+    background:#fff;
+    padding:20px 15px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:8px;
+}
+
+.profile-avatar{
+    width:62px;
+    height:62px;
+    border-radius:50%;
+    background:#075e54;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:28px;
+}
+
+.profile-info{
+    flex:1;
+    min-width:0;
+}
+
+.profile-title{
+    font-size:18px;
+    font-weight:500;
+    word-break:break-all;
+}
+
+.profile-sub{
+    font-size:11px;
+    color:#667781;
+    margin-top:4px;
+}
+
+.setting-section{
+    margin-top:8px;
+}
+
+.section-title{
+    padding:9px 15px 5px;
+    font-size:11px;
+    color:#075e54;
+    text-transform:uppercase;
+}
+
+.setting-item{
+    background:#fff;
+    min-height:58px;
+    padding:10px 15px;
+    display:flex;
+    align-items:center;
+    border-bottom:1px solid #eee;
+}
+
+.setting-icon{
+    width:35px;
+    font-size:20px;
+}
+
+.setting-content{
+    flex:1;
+}
+
+.setting-title{
+    font-size:14px;
+}
+
+.setting-desc{
+    font-size:11px;
+    color:#667781;
+    margin-top:3px;
+}
+
+.setting-arrow{
+    color:#8696a0;
+    font-size:18px;
+}
+
+/* switches */
+
+.switch{
+    width:44px;
+    height:24px;
+    position:relative;
+}
+
+.switch input{
+    opacity:0;
+    width:0;
+    height:0;
+}
+
+.slider{
+    position:absolute;
+    inset:0;
+    background:#c8cdd0;
+    border-radius:20px;
+    transition:.2s;
+}
+
+.slider:before{
+    content:"";
+    position:absolute;
+    width:18px;
+    height:18px;
+    left:3px;
+    top:3px;
+    background:#fff;
+    border-radius:50%;
+    transition:.2s;
+    box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+
+.switch input:checked + .slider{
+    background:#25d366;
+}
+
+.switch input:checked + .slider:before{
+    transform:translateX(20px);
+}
+
+/* =========================================================
+   LOG
+========================================================= */
+
+.log-page{
+    background:#111;
+    color:#ddd;
+}
+
+.log-content{
+    flex:1;
+    overflow-y:auto;
+    padding:10px;
+    font-family:monospace;
+    font-size:11px;
+    white-space:pre-wrap;
+    word-break:break-word;
+}
+
+.log-line{
+    padding:4px 0;
+    border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.55);
+    z-index:100;
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-box{
+    width:100%;
+    max-height:80dvh;
+    background:white;
+    border-radius:18px 18px 0 0;
+    overflow:hidden;
+    padding-bottom:env(safe-area-inset-bottom);
+    animation:slideUp .18s ease;
+}
+
+@keyframes slideUp{
+    from{
+        transform:translateY(100%);
+    }
+    to{
+        transform:translateY(0);
+    }
+}
+
+.modal-head{
+    padding:17px;
+    border-bottom:1px solid #eee;
+    display:flex;
+    align-items:center;
+}
+
+.modal-title{
+    flex:1;
+    font-size:17px;
+    font-weight:600;
+}
+
+.modal-close{
+    width:35px;
+    height:35px;
+    border:0;
+    background:#f0f2f5;
+    border-radius:50%;
+}
+
+.incoming-list{
+    max-height:60dvh;
+    overflow-y:auto;
+}
+
+.incoming-item{
+    padding:13px 15px;
+    border-bottom:1px solid #eee;
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.incoming-avatar{
+    width:45px;
+    height:45px;
+    min-width:45px;
+    border-radius:50%;
+    background:#dfe5e7;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.incoming-info{
+    flex:1;
+    min-width:0;
+}
+
+.incoming-name{
+    font-size:14px;
+    font-weight:500;
+    word-break:break-all;
+}
+
+.incoming-time{
+    color:#667781;
+    font-size:10px;
+    margin-top:3px;
+}
+
+.incoming-actions{
+    display:flex;
+    gap:5px;
+}
+
+.incoming-actions button{
+    border:0;
+    border-radius:17px;
+    padding:8px 10px;
+    font-size:10px;
+}
+
+.no-request{
+    padding:30px;
+    text-align:center;
+    color:#667781;
+    font-size:13px;
+}
+
+/* toast */
+
+.toast{
+    position:fixed;
+    z-index:200;
+    left:50%;
+    bottom:75px;
+    transform:translateX(-50%) translateY(20px);
+    background:#323232;
+    color:#fff;
+    padding:9px 15px;
+    border-radius:18px;
+    font-size:12px;
+    opacity:0;
+    pointer-events:none;
+    transition:.2s;
+    max-width:85%;
+    text-align:center;
+}
+
+.toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+}
+
+/* desktop fallback */
+
+@media(min-width:700px){
+    .app{
+        max-width:500px;
+        margin:auto;
+        box-shadow:0 0 20px rgba(0,0,0,.15);
+    }
+
+    body{
+        background:#d7dbd9;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<!-- =====================================================
+     HOME / CHAT LIST
+===================================================== -->
+
+<section id="homePage" class="page active">
+
+    <header class="topbar">
+        <div class="topbar-title">
+            <h1>Chat</h1>
+            <small id="myIdSmall">Menghubungkan...</small>
+        </div>
+
+        <button class="icon-btn" id="requestTopBtn" title="Request">
+            ＋
+        </button>
+
+        <button class="icon-btn" id="settingsTopBtn" title="Pengaturan">
+            ⋮
+        </button>
+    </header>
+
+    <div class="search-wrap">
+        <div class="search-box">
+            <span>⌕</span>
+            <input id="searchInput"
+                   type="search"
+                   placeholder="Cari atau mulai chat">
+        </div>
+    </div>
+
+    <div id="connectionBanner" class="connection-banner">
+        Menunggu koneksi...
+    </div>
+
+    <div id="peerList" class="peer-list"></div>
+
+    <nav class="bottom-nav">
+        <button class="nav-btn active" id="navChat">
+            <span class="nav-icon">💬</span>
+            <span class="nav-label">Chat</span>
+        </button>
+
+        <button class="nav-btn" id="navRequest">
+            <span class="nav-icon">👥</span>
+            <span class="nav-label">Request</span>
+            <span id="requestBadge" class="nav-badge">0</span>
+        </button>
+
+        <button class="nav-btn" id="navSettings">
+            <span class="nav-icon">⚙</span>
+            <span class="nav-label">Pengaturan</span>
+        </button>
+    </nav>
+
+</section>
+
+
+<!-- =====================================================
+     CHAT
+===================================================== -->
+
+<section id="chatPage" class="page chat-page">
+
+    <header class="chat-header">
+
+        <button class="chat-back" id="chatBackBtn">
+            ‹
+        </button>
+
+        <div class="chat-avatar">
+            👤
+        </div>
+
+        <div class="chat-user">
+            <div id="chatPeerName" class="chat-user-name">
+                Peer
+            </div>
+
+            <div id="chatPeerStatus" class="chat-user-status">
+                offline
+            </div>
+        </div>
+
+        <button class="chat-menu" id="chatMenuBtn">
+            ⋮
+        </button>
+
+    </header>
+
+    <div id="messages" class="messages">
+
+        <div class="chat-info">
+            Pesan pada chat ini dikirim langsung antar perangkat
+            menggunakan koneksi P2P.
+        </div>
+
+    </div>
+
+    <div class="chat-input-area">
+
+        <button class="attach-btn" id="emojiBtn">
+            ☺
+        </button>
+
+        <div class="input-box">
+            <textarea id="messageInput"
+                      rows="1"
+                      placeholder="Ketik pesan..."
+                      enterkeyhint="send"></textarea>
+        </div>
+
+        <button class="send-btn" id="sendBtn">
+            ➤
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     REQUEST
+===================================================== -->
+
+<section id="requestPage" class="page request-page">
+
+    <header class="topbar">
+
+        <div class="topbar-title">
+            <h1>Request</h1>
+            <small>Permintaan koneksi</small>
+        </div>
+
+        <button class="icon-btn" id="requestRefreshBtn">
+            ↻
+        </button>
+
+    </header>
+
+    <div id="requestList" class="request-list"></div>
+
+    <nav class="bottom-nav">
+
+        <button class="nav-btn" id="navChat2">
+            <span class="nav-icon">💬</span>
+            <span class="nav-label">Chat</span>
+        </button>
+
+        <button class="nav-btn active">
+            <span class="nav-icon">👥</span>
+            <span class="nav-label">Request</span>
+            <span id="requestBadge2" class="nav-badge">0</span>
+        </button>
+
+        <button class="nav-btn" id="navSettings2">
+            <span class="nav-icon">⚙</span>
+            <span class="nav-label">Pengaturan</span>
+        </button>
+
+    </nav>
+
+</section>
+
+
+<!-- =====================================================
+     SETTINGS
+===================================================== -->
+
+<section id="settingsPage" class="page settings-page">
+
+    <header class="topbar">
+
+        <div class="topbar-title">
+            <h1>Pengaturan</h1>
+            <small>Messenger P2P</small>
+        </div>
+
+    </header>
+
+    <div class="settings-scroll">
+
+        <div class="profile-card">
+
+            <div class="profile-avatar">
+                👤
+            </div>
+
+            <div class="profile-info">
+                <div id="profileId" class="profile-title">
+                    -
+                </div>
+
+                <div class="profile-sub">
+                    ID perangkat saya
+                </div>
+            </div>
+
+        </div>
+
+        <div class="setting-section">
+
+            <div class="section-title">
+                Koneksi
+            </div>
+
+            <div class="setting-item">
+
+                <div class="setting-icon">
+                    ⚡
+                </div>
+
+                <div class="setting-content">
+                    <div class="setting-title">
+                        AUTO TERIMA SEMUA REQUEST
+                    </div>
+
+                    <div class="setting-desc">
+                        Otomatis menerima permintaan koneksi
+                    </div>
+                </div>
+
+                <label class="switch">
+                    <input type="checkbox"
+                           id="autoAccept"
+                           checked>
+                    <span class="slider"></span>
+                </label>
+
+            </div>
+
+
+            <div class="setting-item">
+
+                <div class="setting-icon">
+                    🔗
+                </div>
+
+                <div class="setting-content">
+                    <div class="setting-title">
+                        AUTO HUBUNGKAN USER BELUM TERKONEKSI
+                    </div>
+
+                    <div class="setting-desc">
+                        Otomatis menghubungkan peer yang tersedia
+                    </div>
+                </div>
+
+                <label class="switch">
+                    <input type="checkbox"
+                           id="autoConnect"
+                           checked>
+                    <span class="slider"></span>
+                </label>
+
+            </div>
+
+        </div>
+
+
+        <div class="setting-section">
+
+            <div class="section-title">
+                Akun & Sistem
+            </div>
+
+            <div class="setting-item"
+                 id="copyMyIdBtn">
+
+                <div class="setting-icon">
+                    📋
+                </div>
+
+                <div class="setting-content">
+                    <div class="setting-title">
+                        Salin ID saya
+                    </div>
+
+                    <div class="setting-desc">
+                        <span id="copyIdText">-</span>
+                    </div>
+                </div>
+
+                <div class="setting-arrow">
+                    ›
+                </div>
+
+            </div>
+
+
+            <div class="setting-item"
+                 id="logBtn">
+
+                <div class="setting-icon">
+                    🛠
+                </div>
+
+                <div class="setting-content">
+                    <div class="setting-title">
+                        Log proses
+                    </div>
+
+                    <div class="setting-desc">
+                        Informasi koneksi WebRTC dan signaling
+                    </div>
+                </div>
+
+                <div class="setting-arrow">
+                    ›
+                </div>
+
+            </div>
+
+
+            <div class="setting-item"
+                 id="resetBtn">
+
+                <div class="setting-icon">
+                    ♻
+                </div>
+
+                <div class="setting-content">
+                    <div class="setting-title">
+                        Reset ID
+                    </div>
+
+                    <div class="setting-desc">
+                        Membuat ID perangkat baru
+                    </div>
+                </div>
+
+                <div class="setting-arrow">
+                    ›
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <nav class="bottom-nav">
+
+        <button class="nav-btn" id="navChat3">
+            <span class="nav-icon">💬</span>
+            <span class="nav-label">Chat</span>
+        </button>
+
+        <button class="nav-btn" id="navRequest3">
+            <span class="nav-icon">👥</span>
+            <span class="nav-label">Request</span>
+            <span id="requestBadge3" class="nav-badge">0</span>
+        </button>
+
+        <button class="nav-btn active">
+            <span class="nav-icon">⚙</span>
+            <span class="nav-label">Pengaturan</span>
+        </button>
+
+    </nav>
+
+</section>
+
+
+<!-- =====================================================
+     LOG
+===================================================== -->
+
+<section id="logPage" class="page log-page">
+
+    <header class="topbar">
+
+        <button class="icon-btn" id="logBackBtn">
+            ‹
+        </button>
+
+        <div class="topbar-title">
+            <h1>Log Proses</h1>
+            <small>WebRTC / Signaling</small>
+        </div>
+
+        <button class="icon-btn" id="clearLogBtn">
+            🗑
+        </button>
+
+    </header>
+
+    <div id="logContent" class="log-content"></div>
+
+</section>
+
+
+<!-- =====================================================
+     REQUEST MODAL
+===================================================== -->
+
+<div id="requestModal" class="modal">
+
+    <div class="modal-box">
+
+        <div class="modal-head">
+
+            <div class="modal-title">
+                Permintaan koneksi
+            </div>
+
+            <button class="modal-close"
+                    id="closeRequestModal">
+                ✕
+            </button>
+
+        </div>
+
+        <div id="incomingList"
+             class="incoming-list">
+        </div>
+
+    </div>
+
+</div>
+
+
+<div id="toast" class="toast"></div>
+
+</div>
+
+
+<script>
+/* =========================================================
+   CONFIG
+========================================================= */
+
+const GAS_URL =
+"https://script.google.com/macros/s/AKfycbx503tuFMON6njMTIJZogTuQGZYIjIoJZIfmn1Q1slBUAmJGA3VczzZosSAv2GYxtkO-Q/exec";
+
+const STUN_CONFIG = {
+    iceServers:[
+        {
+            urls:"stun:stun.l.google.com:19302"
+        }
+    ]
+};
+
+
+/* =========================================================
+   GLOBAL STATE
+========================================================= */
+
+let myID = "";
+
+let onlineUsersCache = [];
+
+let currentPeer = null;
+
+let connections = {};
+
+let incomingRequests = {};
+
+let pendingConnections = {};
+
+let pairStates = {};
+
+let processingSignals = {};
+
+let knownSignals = {};
+
+let requestIdsByPair = {};
+
+let retryTimers = {};
+
+let retryCounts = {};
+
+let messages = {};
+
+let unreadCounts = {};
+
+let lastMessages = {};
+
+let pollOnlineTimer = null;
+let pollSignalTimer = null;
+let heartbeatTimer = null;
+let autoConnectTimer = null;
+
+let logs = [];
+
+
+/* =========================================================
+   ID
+========================================================= */
+
+function randomID(length=8){
+
+    const chars =
+        "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+    let result = "";
+
+    for(let i=0;i<length;i++){
+        result += chars[
+            Math.floor(Math.random()*chars.length)
+        ];
+    }
+
+    return result;
+}
+
+
+function loadID(){
+
+    let saved =
+        localStorage.getItem("p2p_my_id");
+
+    if(!saved){
+        saved = randomID(8);
+        localStorage.setItem("p2p_my_id",saved);
+    }
+
+    myID = saved;
+
+    document.getElementById("myIdSmall").textContent =
+        "ID: " + myID;
+
+    document.getElementById("profileId").textContent =
+        myID;
+
+    document.getElementById("copyIdText").textContent =
+        myID;
+}
+
+
+/* =========================================================
+   GAS
+========================================================= */
+
+async function gasPost(data){
+
+    if(
+        !GAS_URL ||
+        GAS_URL.includes("MASUKKAN_URL")
+    ){
+        return {
+            ok:false,
+            error:"URL GAS belum diatur"
+        };
+    }
+
+    try{
+
+        const response =
+            await fetch(
+                GAS_URL,
+                {
+                    method:"POST",
+                    headers:{
+                        "Content-Type":
+                            "text/plain;charset=utf-8"
+                    },
+                    body:JSON.stringify(data)
+                }
+            );
+
+        return await response.json();
+
+    }catch(error){
+
+        console.error(
+            "GAS POST ERROR:",
+            error
+        );
+
+        return {
+            ok:false,
+            error:error.message
+        };
+    }
+}
+
+
+async function gasGet(params){
+
+    if(
+        !GAS_URL ||
+        GAS_URL.includes("MASUKKAN_URL")
+    ){
+        return {
+            ok:false,
+            error:"URL GAS belum diatur"
+        };
+    }
+
+    try{
+
+        const query =
+            new URLSearchParams(params);
+
+        const response =
+            await fetch(
+                GAS_URL + "?" + query.toString()
+            );
+
+        return await response.json();
+
+    }catch(error){
+
+        console.error(
+            "GAS GET ERROR:",
+            error
+        );
+
+        return {
+            ok:false,
+            error:error.message
+        };
+    }
+}
+
+
+/* =========================================================
+   HEARTBEAT
+========================================================= */
+
+async function sendHeartbeat(){
+
+    await gasPost({
+        action:"heartbeat",
+        id:myID
+    });
+}
+
+
+function sendOffline(){
+
+    try{
+
+        const blob =
+            new Blob(
+                [
+                    JSON.stringify({
+                        action:"offline",
+                        id:myID
+                    })
+                ],
+                {
+                    type:"text/plain;charset=utf-8"
+                }
+            );
+
+        navigator.sendBeacon(
+            GAS_URL,
+            blob
+        );
+
+    }catch(e){}
+}
+
+
+/* =========================================================
+   PAIR MANAGEMENT
+========================================================= */
+
+function getPairKey(remoteID){
+
+    return [
+        myID,
+        remoteID
+    ].sort().join(":");
+}
+
+
+function getPairRole(remoteID){
+
+    return myID < remoteID
+        ? "initiator"
+        : "receiver";
+}
+
+
+function getPairState(remoteID){
+
+    return pairStates[remoteID] || "none";
+}
+
+
+function savePairState(
+    remoteID,
+    state,
+    requestId=null
+){
+
+    pairStates[remoteID] = state;
+
+    const key =
+        getPairKey(remoteID);
+
+    if(requestId){
+        requestIdsByPair[key] = requestId;
+    }
+
+    logProcess(
+        `[PAIR] ${remoteID} → ${state}` +
+        (
+            requestId
+            ? ` | ${requestId}`
+            : ""
+        )
+    );
+}
+
+
+function getActiveRequestId(remoteID){
+
+    return requestIdsByPair[
+        getPairKey(remoteID)
+    ] || null;
+}
+
+
+/* =========================================================
+   LOG
+========================================================= */
+
+function logProcess(text){
+
+    const time =
+        new Date().toLocaleTimeString(
+            "id-ID",
+            {
+                hour:"2-digit",
+                minute:"2-digit",
+                second:"2-digit"
+            }
+        );
+
+    const line =
+        `[${time}] ${text}`;
+
+    logs.push(line);
+
+    if(logs.length > 500){
+        logs.shift();
+    }
+
+    const content =
+        document.getElementById("logContent");
+
+    if(content){
+
+        const div =
+            document.createElement("div");
+
+        div.className = "log-line";
+
+        div.textContent = line;
+
+        content.appendChild(div);
+
+        content.scrollTop =
+            content.scrollHeight;
+    }
+
+    console.log(line);
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+let toastTimer;
+
+function toast(text){
+
+    const el =
+        document.getElementById("toast");
+
+    el.textContent = text;
+
+    el.classList.add("show");
+
+    clearTimeout(toastTimer);
+
+    toastTimer =
+        setTimeout(()=>{
+            el.classList.remove("show");
+        },2200);
+}
+
+
+/* =========================================================
+   PAGE NAVIGATION
+========================================================= */
+
+function showPage(id){
+
+    document
+        .querySelectorAll(".page")
+        .forEach(page=>{
+            page.classList.remove("active");
+        });
+
+    document
+        .getElementById(id)
+        .classList.add("active");
+}
+
+
+function openHome(){
+
+    showPage("homePage");
+
+    renderPeerList();
+
+}
+
+
+function openRequests(){
+
+    showPage("requestPage");
+
+    renderRequestPage();
+
+}
+
+
+function openSettings(){
+
+    showPage("settingsPage");
+
+}
+
+
+function openLogs(){
+
+    showPage("logPage");
+
+}
+
+
+/* =========================================================
+   MESSAGE STORAGE
+========================================================= */
+
+function loadMessages(){
+
+    try{
+
+        messages =
+            JSON.parse(
+                localStorage.getItem(
+                    "p2p_messages"
+                ) || "{}"
+            );
+
+        unreadCounts =
+            JSON.parse(
+                localStorage.getItem(
+                    "p2p_unread"
+                ) || "{}"
+            );
+
+        lastMessages =
+            JSON.parse(
+                localStorage.getItem(
+                    "p2p_last_messages"
+                ) || "{}"
+            );
+
+    }catch(e){
+
+        messages = {};
+        unreadCounts = {};
+        lastMessages = {};
+    }
+}
+
+
+function saveMessages(){
+
+    localStorage.setItem(
+        "p2p_messages",
+        JSON.stringify(messages)
+    );
+
+    localStorage.setItem(
+        "p2p_unread",
+        JSON.stringify(unreadCounts)
+    );
+
+    localStorage.setItem(
+        "p2p_last_messages",
+        JSON.stringify(lastMessages)
+    );
+}
+
+
+function getPeerMessages(remoteID){
+
+    if(!messages[remoteID]){
+        messages[remoteID] = [];
+    }
+
+    return messages[remoteID];
+}
+
+
+function addMessage(
+    remoteID,
+    text,
+    outgoing
+){
+
+    const item = {
+
+        text:text,
+
+        outgoing:outgoing,
+
+        time:Date.now()
+    };
+
+    getPeerMessages(remoteID).push(item);
+
+    lastMessages[remoteID] = text;
+
+    if(!outgoing && currentPeer !== remoteID){
+
+        unreadCounts[remoteID] =
+            (unreadCounts[remoteID] || 0) + 1;
+    }
+
+    saveMessages();
+
+    if(currentPeer === remoteID){
+
+        renderMessages();
+    }
+
+    renderPeerList();
+}
+
+
+/* =========================================================
+   CHAT
+========================================================= */
+
+function openChat(remoteID){
+
+    currentPeer = remoteID;
+
+    unreadCounts[remoteID] = 0;
+
+    saveMessages();
+
+    document.getElementById(
+        "chatPeerName"
+    ).textContent = remoteID;
+
+    updateChatStatus();
+
+    renderMessages();
+
+    showPage("chatPage");
+
+    setTimeout(()=>{
+
+        const area =
+            document.getElementById("messages");
+
+        area.scrollTop =
+            area.scrollHeight;
+
+        document
+            .getElementById("messageInput")
+            .focus();
+
+    },100);
+}
+
+
+function closeChat(){
+
+    currentPeer = null;
+
+    openHome();
+}
+
+
+function updateChatStatus(){
+
+    if(!currentPeer) return;
+
+    const status =
+        document.getElementById(
+            "chatPeerStatus"
+        );
+
+    if(isConnected(currentPeer)){
+
+        status.textContent = "online";
+
+    }else if(isNegotiating(currentPeer)){
+
+        status.textContent =
+            "menghubungkan...";
+
+    }else{
+
+        const online =
+            onlineUsersCache.some(
+                u=>normalizeUserID(u) === currentPeer
+            );
+
+        status.textContent =
+            online ? "tersedia" : "offline";
+    }
+}
+
+
+function renderMessages(){
+
+    if(!currentPeer) return;
+
+    const area =
+        document.getElementById("messages");
+
+    area.innerHTML = "";
+
+    const info =
+        document.createElement("div");
+
+    info.className = "chat-info";
+
+    info.textContent =
+        "Pesan pada chat ini dikirim langsung antar perangkat menggunakan koneksi P2P.";
+
+    area.appendChild(info);
+
+    const list =
+        getPeerMessages(currentPeer);
+
+    list.forEach(item=>{
+
+        const row =
+            document.createElement("div");
+
+        row.className =
+            "message-row " +
+            (item.outgoing ? "out" : "in");
+
+        const bubble =
+            document.createElement("div");
+
+        bubble.className =
+            "message-bubble";
+
+        const text =
+            document.createTextNode(
+                item.text
+            );
+
+        bubble.appendChild(text);
+
+        const meta =
+            document.createElement("span");
+
+        meta.className =
+            "message-meta";
+
+        meta.textContent =
+            new Date(
+                item.time
+            ).toLocaleTimeString(
+                "id-ID",
+                {
+                    hour:"2-digit",
+                    minute:"2-digit"
+                }
+            );
+
+        if(item.outgoing){
+
+            const check =
+                document.createElement("span");
+
+            check.className =
+                "message-check";
+
+            check.textContent = " ✓✓";
+
+            meta.appendChild(check);
+        }
+
+        bubble.appendChild(meta);
+
+        row.appendChild(bubble);
+
+        area.appendChild(row);
+    });
+
+    setTimeout(()=>{
+        area.scrollTop =
+            area.scrollHeight;
+    },20);
+}
+
+
+function sendCurrentMessage(){
+
+    if(!currentPeer) return;
+
+    const input =
+        document.getElementById(
+            "messageInput"
+        );
+
+    const text =
+        input.value.trim();
+
+    if(!text) return;
+
+    if(!isConnected(currentPeer)){
+
+        toast(
+            "Peer belum terhubung"
+        );
+
+        return;
+    }
+
+    const connection =
+        connections[currentPeer];
+
+    if(
+        !connection ||
+        !connection.channel ||
+        connection.channel.readyState !== "open"
+    ){
+
+        toast(
+            "Koneksi belum siap"
+        );
+
+        return;
+    }
+
+    try{
+
+        connection.channel.send(
+            JSON.stringify({
+                type:"chat",
+                text:text,
+                time:Date.now()
+            })
+        );
+
+        addMessage(
+            currentPeer,
+            text,
+            true
+        );
+
+        input.value = "";
+
+        input.style.height =
+            "auto";
+
+    }catch(error){
+
+        logProcess(
+            `[CHAT ERROR] ${error.message}`
+        );
+
+        toast(
+            "Pesan gagal dikirim"
+        );
+    }
+}
+
+
+/* =========================================================
+   CONNECTION CHECK
+========================================================= */
+
+function isConnected(remoteID){
+
+    const connection =
+        connections[remoteID];
+
+    return !!(
+        connection &&
+        connection.channel &&
+        connection.channel.readyState === "open"
+    );
+}
+
+
+function isNegotiating(remoteID){
+
+    const state =
+        getPairState(remoteID);
+
+    return [
+        "requesting",
+        "requested",
+        "accepted",
+        "offering",
+        "answering"
+    ].includes(state);
+}
+
+
+/* =========================================================
+   ONLINE USERS
+========================================================= */
+
+function normalizeUserID(user){
+
+    if(typeof user === "string"){
+        return user;
+    }
+
+    if(!user) return "";
+
+    return (
+        user.id ||
+        user.ID ||
+        user.userId ||
+        user.userID ||
+        ""
+    );
+}
+
+
+async function pollOnline(){
+
+    const result =
+        await gasGet({
+            action:"online"
+        });
+
+    if(!result || result.ok === false){
+
+        logProcess(
+            "[ONLINE] gagal membaca online user"
+        );
+
+        return;
+    }
+
+    let list =
+        result.users ||
+        result.data ||
+        result.online ||
+        [];
+
+    if(!Array.isArray(list)){
+        list = [];
+    }
+
+    onlineUsersCache =
+        list
+            .map(normalizeUserID)
+            .filter(id=>id && id !== myID);
+
+    renderPeerList();
+
+    if(currentPeer){
+        updateChatStatus();
+    }
+}
+
+
+/* =========================================================
+   PEER LIST
+========================================================= */
+
+function getAllPeerIDs(){
+
+    const set =
+        new Set();
+
+    onlineUsersCache.forEach(id=>{
+        if(id && id !== myID){
+            set.add(id);
+        }
+    });
+
+    Object.keys(connections).forEach(id=>{
+        if(id !== myID){
+            set.add(id);
+        }
+    });
+
+    Object.keys(lastMessages).forEach(id=>{
+        if(id !== myID){
+            set.add(id);
+        }
+    });
+
+    Object.keys(incomingRequests).forEach(requestId=>{
+
+        const signal =
+            incomingRequests[requestId];
+
+        if(
+            signal &&
+            signal.from &&
+            signal.from !== myID
+        ){
+            set.add(signal.from);
+        }
+    });
+
+    return Array.from(set);
+}
+
+
+function getPeerStatus(remoteID){
+
+    if(isConnected(remoteID)){
+        return "connected";
+    }
+
+    if(isNegotiating(remoteID)){
+        return "process";
+    }
+
+    return "offline";
+}
+
+
+function getStatusText(remoteID){
+
+    if(isConnected(remoteID)){
+        return "Online";
+    }
+
+    if(isNegotiating(remoteID)){
+        return "Menghubungkan...";
+    }
+
+    if(
+        onlineUsersCache.includes(remoteID)
+    ){
+        return "Tersedia";
+    }
+
+    return "Offline";
+}
+
+
+function formatPeerTime(remoteID){
+
+    const list =
+        getPeerMessages(remoteID);
+
+    if(!list.length){
+
+        if(isConnected(remoteID)){
+            return "Online";
+        }
+
+        return "";
+    }
+
+    const last =
+        list[list.length-1];
+
+    return new Date(
+        last.time
+    ).toLocaleTimeString(
+        "id-ID",
+        {
+            hour:"2-digit",
+            minute:"2-digit"
+        }
+    );
+}
+
+
+function renderPeerList(){
+
+    const list =
+        document.getElementById(
+            "peerList"
+        );
+
+    if(!list) return;
+
+    const search =
+        document.getElementById(
+            "searchInput"
+        ).value
+        .trim()
+        .toLowerCase();
+
+    let peers =
+        getAllPeerIDs();
+
+    peers =
+        peers.filter(id=>
+            !search ||
+            id.toLowerCase()
+                .includes(search)
+        );
+
+    peers.sort((a,b)=>{
+
+        const aConn =
+            isConnected(a);
+
+        const bConn =
+            isConnected(b);
+
+        if(aConn !== bConn){
+            return bConn - aConn;
+        }
+
+        const at =
+            getPeerMessages(a);
+
+        const bt =
+            getPeerMessages(b);
+
+        const aTime =
+            at.length
+                ? at[at.length-1].time
+                : 0;
+
+        const bTime =
+            bt.length
+                ? bt[bt.length-1].time
+                : 0;
+
+        return bTime-aTime;
+    });
+
+    if(!peers.length){
+
+        list.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">💬</div>
+                <h2>Belum ada chat</h2>
+                <p>
+                    User yang sedang online akan muncul
+                    otomatis di sini.
+                </p>
+            </div>
+        `;
+
+        return;
+    }
+
+    list.innerHTML = "";
+
+    peers.forEach(remoteID=>{
+
+        const item =
+            document.createElement("div");
+
+        item.className =
+            "peer-item";
+
+        const status =
+            getPeerStatus(remoteID);
+
+        const unread =
+            unreadCounts[remoteID] || 0;
+
+        const preview =
+            lastMessages[remoteID] ||
+            getStatusText(remoteID);
+
+        item.innerHTML = `
+            <div class="peer-avatar">
+                👤
+                <span class="peer-status-dot ${status}"></span>
+            </div>
+
+            <div class="peer-content">
+
+                <div class="peer-line">
+
+                    <div class="peer-name">
+                        ${escapeHTML(remoteID)}
+                    </div>
+
+                    <div class="peer-time">
+                        ${escapeHTML(
+                            formatPeerTime(remoteID)
+                        )}
+                    </div>
+
+                </div>
+
+                <div class="peer-preview">
+                    ${escapeHTML(preview)}
+                </div>
+
+            </div>
+
+            ${
+                unread
+                ? `<div class="peer-unread">
+                    ${unread > 99 ? "99+" : unread}
+                   </div>`
+                : ""
+            }
+        `;
+
+        item.addEventListener(
+            "click",
+            ()=>openChat(remoteID)
+        );
+
+        list.appendChild(item);
+    });
+}
+
+
+function escapeHTML(text){
+
+    return String(text || "")
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+}
+
+
+/* =========================================================
+   REQUEST CONNECTION
+========================================================= */
+
+async function requestConnection(
+    remoteID,
+    automatic=false
+){
+
+    if(!remoteID || remoteID === myID){
+        return false;
+    }
+
+    if(isConnected(remoteID)){
+
+        if(automatic){
+            return false;
+        }
+
+        toast("Sudah terhubung");
+
+        return false;
+    }
+
+    if(isNegotiating(remoteID)){
+
+        logProcess(
+            `[REQUEST] ${remoteID} sudah dalam proses`
+        );
+
+        return false;
+    }
+
+    const role =
+        getPairRole(remoteID);
+
+    /*
+       AUTO CONNECT:
+       hanya ID yang lebih kecil menjadi initiator.
+       Ini mencegah A dan B sama-sama mengirim request.
+    */
+
+    if(
+        automatic &&
+        role !== "initiator"
+    ){
+
+        logProcess(
+            `[AUTO] ${remoteID} → menunggu initiator`
+        );
+
+        return false;
+    }
+
+    /*
+       Kalau sudah ada request masuk dari peer,
+       jangan membuat request kedua.
+    */
+
+    const hasIncoming =
+        Object.values(
+            incomingRequests
+        ).some(
+            signal =>
+                signal &&
+                signal.from === remoteID
+        );
+
+    if(hasIncoming){
+
+        logProcess(
+            `[REQUEST] sudah ada incoming request dari ${remoteID}`
+        );
+
+        return false;
+    }
+
+    savePairState(
+        remoteID,
+        "requesting"
+    );
+
+    logProcess(
+        `[REQUEST] mengirim request ke ${remoteID}` +
+        (automatic ? " [AUTO]" : "")
+    );
+
+    const result =
+        await gasPost({
+            action:"request",
+            from:myID,
+            to:remoteID
+        });
+
+    if(!result || result.ok === false){
+
+        savePairState(
+            remoteID,
+            "failed"
+        );
+
+        scheduleRetry(
+            remoteID
+        );
+
+        logProcess(
+            `[REQUEST] gagal ${remoteID}: ${
+                result?.error || "unknown"
+            }`
+        );
+
+        return false;
+    }
+
+    /*
+       GAS biasanya mengembalikan requestId.
+       Bila tidak, ambil dari response jika tersedia.
+    */
+
+    const requestId =
+        result.requestId ||
+        result.id ||
+        result.signal?.requestId ||
+        null;
+
+    if(requestId){
+
+        pendingConnections[requestId] = {
+            remoteID:remoteID,
+            requestId:requestId
+        };
+
+        requestIdsByPair[
+            getPairKey(remoteID)
+        ] = requestId;
+
+        savePairState(
+            remoteID,
+            "requested",
+            requestId
+        );
+
+        logProcess(
+            `[REQUEST] berhasil ${remoteID} | ${requestId}`
+        );
+
+    }else{
+
+        /*
+          Jika GAS tidak mengembalikan requestId,
+          polling signal akan menemukan requestId.
+        */
+
+        savePairState(
+            remoteID,
+            "requested"
+        );
+
+        logProcess(
+            `[REQUEST] berhasil ${remoteID}, menunggu signal`
+        );
+    }
+
+    renderPeerList();
+
+    return true;
+}
+
+
+/* =========================================================
+   ACCEPT / REJECT
+========================================================= */
+
+async function acceptRequest(
+    requestId
+){
+
+    const signal =
+        incomingRequests[requestId];
+
+    if(!signal){
+        return;
+    }
+
+    const remoteID =
+        signal.from;
+
+    if(!remoteID){
+        return;
+    }
+
+    /*
+       Receiver harus merupakan ID yang lebih besar
+       jika request berasal dari AUTO CONNECT.
+    */
+
+    if(
+        getPairRole(remoteID) !== "receiver"
+    ){
+
+        logProcess(
+            `[COLLISION] request ${requestId} dari ${remoteID} diabaikan karena role saya initiator`
+        );
+
+        delete incomingRequests[requestId];
+
+        renderIncoming();
+
+        return;
+    }
+
+    if(isConnected(remoteID)){
+
+        delete incomingRequests[requestId];
+
+        renderIncoming();
+
+        return;
+    }
+
+    processingSignals[
+        requestId + ":accept"
+    ] = true;
+
+    savePairState(
+        remoteID,
+        "accepted",
+        requestId
+    );
+
+    logProcess(
+        `[ACCEPT] ${remoteID} | ${requestId}`
+    );
+
+    const result =
+        await gasPost({
+            action:"accept",
+            requestId:requestId,
+            to:myID
+        });
+
+    delete processingSignals[
+        requestId + ":accept"
+    ];
+
+    if(!result || result.ok === false){
+
+        savePairState(
+            remoteID,
+            "failed",
+            requestId
+        );
+
+        logProcess(
+            `[ACCEPT] gagal ${remoteID}: ${
+                result?.error || "unknown"
+            }`
+        );
+
+        return;
+    }
+
+    delete incomingRequests[requestId];
+
+    pendingConnections[requestId] = {
+        remoteID:remoteID,
+        requestId:requestId
+    };
+
+    requestIdsByPair[
+        getPairKey(remoteID)
+    ] = requestId;
+
+    renderIncoming();
+    renderRequestPage();
+    updateRequestBadges();
+    renderPeerList();
+
+    toast(
+        "Request diterima"
+    );
+}
+
+
+async function rejectRequest(
+    requestId
+){
+
+    const signal =
+        incomingRequests[requestId];
+
+    if(!signal){
+        return;
+    }
+
+    const remoteID =
+        signal.from;
+
+    logProcess(
+        `[REJECT] ${remoteID} | ${requestId}`
+    );
+
+    const result =
+        await gasPost({
+            action:"reject",
+            requestId:requestId,
+            to:myID
+        });
+
+    if(
+        result &&
+        result.ok === false
+    ){
+
+        logProcess(
+            `[REJECT] gagal: ${
+                result.error || "unknown"
+            }`
+        );
+
+        return;
+    }
+
+    delete incomingRequests[requestId];
+
+    if(
+        getPairState(remoteID) !== "connected"
+    ){
+
+        savePairState(
+            remoteID,
+            "none"
+        );
+    }
+
+    renderIncoming();
+    renderRequestPage();
+    updateRequestBadges();
+    renderPeerList();
+}
+
+
+/* =========================================================
+   SIGNAL POLLING
+========================================================= */
+
+async function pollSignals(){
+
+    const result =
+        await gasGet({
+            action:"signals",
+            id:myID
+        });
+
+    if(!result || result.ok === false){
+
+        return;
+    }
+
+    let signals =
+        result.signals ||
+        result.data ||
+        [];
+
+    if(!Array.isArray(signals)){
+        signals = [];
+    }
+
+    for(const signal of signals){
+
+        if(!signal || !signal.requestId){
+            continue;
+        }
+
+        await processSignalSafe(
+            signal
+        );
+    }
+}
+
+
+async function processSignalSafe(signal){
+
+    const requestId =
+        signal.requestId;
+
+    const status =
+        signal.status;
+
+    const key =
+        requestId + ":" + status;
+
+    if(processingSignals[key]){
+        return;
+    }
+
+    /*
+       Status yang sama tidak diproses dua kali.
+    */
+
+    if(
+        knownSignals[requestId] === status
+    ){
+        return;
+    }
+
+    processingSignals[key] = true;
+
+    try{
+
+        await processSignal(signal);
+
+        /*
+           Hanya dianggap selesai jika processSignal
+           tidak melempar error.
+        */
+
+        knownSignals[requestId] = status;
+
+    }catch(error){
+
+        logProcess(
+            `[SIGNAL ERROR] ${requestId}/${status}: ${error.message}`
+        );
+
+    }finally{
+
+        delete processingSignals[key];
+    }
+}
+
+
+async function processSignal(signal){
+
+    const requestId =
+        signal.requestId;
+
+    const status =
+        signal.status;
+
+    /*
+       REQUEST
+    */
+
+    if(status === "request"){
+
+        const remoteID =
+            signal.from;
+
+        if(!remoteID || remoteID === myID){
+            return;
+        }
+
+        const role =
+            getPairRole(remoteID);
+
+        /*
+           Jika saya initiator berdasarkan ID,
+           request dari remote merupakan collision.
+        */
+
+        if(role === "initiator"){
+
+            logProcess(
+                `[COLLISION] request ${requestId} dari ${remoteID} diabaikan`
+            );
+
+            return;
+        }
+
+        /*
+           Receiver menerima request.
+        */
+
+        if(isConnected(remoteID)){
+
+            logProcess(
+                `[REQUEST] ${remoteID} sudah connected`
+            );
+
+            return;
+        }
+
+        incomingRequests[requestId] = signal;
+
+        requestIdsByPair[
+            getPairKey(remoteID)
+        ] = requestId;
+
+        savePairState(
+            remoteID,
+            "requested",
+            requestId
+        );
+
+        renderIncoming();
+        renderRequestPage();
+        updateRequestBadges();
+        renderPeerList();
+
+        /*
+           AUTO ACCEPT
+        */
+
+        if(
+            document.getElementById(
+                "autoAccept"
+            ).checked
+        ){
+
+            await acceptRequest(
+                requestId
+            );
+        }
+
+        return;
+    }
+
+
+    /*
+       ACCEPTED
+    */
+
+    if(status === "accepted"){
+
+        const remoteID =
+            signal.from === myID
+                ? signal.to
+                : signal.from;
+
+        if(!remoteID || remoteID === myID){
+            return;
+        }
+
+        /*
+           Hanya initiator yang membuat OFFER.
+        */
+
+        if(
+            getPairRole(remoteID) !== "initiator"
+        ){
+
+            logProcess(
+                `[ACCEPTED] ${remoteID} bukan role initiator saya`
+            );
+
+            return;
+        }
+
+        const current =
+            getActiveRequestId(remoteID);
+
+        if(
+            current &&
+            current !== requestId
+        ){
+
+            logProcess(
+                `[ACCEPTED] request lama diabaikan ${requestId}`
+            );
+
+            return;
+        }
+
+        requestIdsByPair[
+            getPairKey(remoteID)
+        ] = requestId;
+
+        pendingConnections[requestId] = {
+            remoteID:remoteID,
+            requestId:requestId
+        };
+
+        savePairState(
+            remoteID,
+            "accepted",
+            requestId
+        );
+
+        await createOffer(
+            remoteID,
+            requestId
+        );
+
+        return;
+    }
+
+
+    /*
+       OFFER
+    */
+
+    if(status === "offer"){
+
+        const remoteID =
+            signal.from;
+
+        if(!remoteID || remoteID === myID){
+            return;
+        }
+
+        /*
+           Receiver yang menangani OFFER.
+        */
+
+        if(
+            getPairRole(remoteID) !== "receiver"
+        ){
+
+            logProcess(
+                `[OFFER] ${remoteID} diabaikan karena role`
+            );
+
+            return;
+        }
+
+        const current =
+            getActiveRequestId(remoteID);
+
+        if(
+            current &&
+            current !== requestId
+        ){
+
+            logProcess(
+                `[OFFER] request tidak sesuai, diabaikan`
+            );
+
+            return;
+        }
+
+        requestIdsByPair[
+            getPairKey(remoteID)
+        ] = requestId;
+
+        pendingConnections[requestId] = {
+            remoteID:remoteID,
+            requestId:requestId
+        };
+
+        await createAnswer(
+            remoteID,
+            requestId,
+            signal.offer
+        );
+
+        return;
+    }
+
+
+    /*
+       ANSWER
+    */
+
+    if(status === "answer"){
+
+        const remoteID =
+            signal.from;
+
+        if(!remoteID || remoteID === myID){
+            return;
+        }
+
+        /*
+           Hanya initiator yang menerima ANSWER.
+        */
+
+        if(
+            getPairRole(remoteID) !== "initiator"
+        ){
+
+            return;
+        }
+
+        const current =
+            getActiveRequestId(remoteID);
+
+        if(
+            current &&
+            current !== requestId
+        ){
+
+            logProcess(
+                `[ANSWER] request tidak sesuai, diabaikan`
+            );
+
+            return;
+        }
+
+        const connection =
+            connections[remoteID];
+
+        if(
+            !connection ||
+            !connection.pc
+        ){
+
+            logProcess(
+                `[ANSWER] PC tidak ditemukan ${remoteID}`
+            );
+
+            return;
+        }
+
+        if(
+            connection.requestId &&
+            connection.requestId !== requestId
+        ){
+
+            logProcess(
+                `[ANSWER] requestId berbeda`
+            );
+
+            return;
+        }
+
+        await connection.pc.setRemoteDescription(
+            new RTCSessionDescription(
+                signal.answer
+            )
+        );
+
+        savePairState(
+            remoteID,
+            "answering",
+            requestId
+        );
+
+        logProcess(
+            `[ANSWER] diterima dari ${remoteID}`
+        );
+
+        return;
+    }
+
+
+    /*
+       CONNECTED
+    */
+
+    if(status === "connected"){
+
+        const remoteID =
+            signal.from === myID
+                ? signal.to
+                : signal.from;
+
+        if(remoteID){
+
+            savePairState(
+                remoteID,
+                "connected",
+                requestId
+            );
+
+            clearRetry(
+                remoteID
+            );
+
+            renderPeerList();
+
+            if(
+                currentPeer === remoteID
+            ){
+                updateChatStatus();
+            }
+        }
+
+        return;
+    }
+
+
+    /*
+       REJECTED
+    */
+
+    if(status === "rejected"){
+
+        const remoteID =
+            signal.from === myID
+                ? signal.to
+                : signal.from;
+
+        if(remoteID){
+
+            logProcess(
+                `[REJECTED] ${remoteID}`
+            );
+
+            savePairState(
+                remoteID,
+                "failed",
+                requestId
+            );
+
+            scheduleRetry(
+                remoteID
+            );
+        }
+
+        return;
+    }
+}
+
+
+/* =========================================================
+   WEBRTC PEER
+========================================================= */
+
+function createPeer(
+    remoteID,
+    requestId
+){
+
+    const existing =
+        connections[remoteID];
+
+    if(
+        existing &&
+        existing.pc &&
+        existing.pc.connectionState !== "closed" &&
+        existing.pc.connectionState !== "failed"
+    ){
+
+        /*
+           Jangan mengganti PC jika request sama.
+        */
+
+        if(
+            !requestId ||
+            existing.requestId === requestId
+        ){
+
+            return existing;
+        }
+
+        /*
+           Request berbeda = bersihkan PC lama.
+        */
+
+        cleanupConnection(
+            remoteID,
+            false
+        );
+    }
+
+    const pc =
+        new RTCPeerConnection(
+            STUN_CONFIG
+        );
+
+    const connection = {
+        pc:pc,
+        channel:null,
+        requestId:requestId || null
+    };
+
+    connections[remoteID] =
+        connection;
+
+    pc.onicecandidate = event => {
+
+        if(event.candidate){
+
+            logProcess(
+                `[ICE] candidate ${remoteID}`
+            );
+        }
+    };
+
+    pc.onicegatheringstatechange = ()=>{
+
+        logProcess(
+            `[ICE] ${remoteID} → ${pc.iceGatheringState}`
+        );
+    };
+
+    pc.onconnectionstatechange = ()=>{
+
+        const state =
+            pc.connectionState;
+
+        logProcess(
+            `[WEBRTC] ${remoteID} → ${state}`
+        );
+
+        renderPeerList();
+
+        if(currentPeer === remoteID){
+            updateChatStatus();
+        }
+
+        if(state === "connected"){
+
+            savePairState(
+                remoteID,
+                "connected",
+                requestId
+            );
+
+            clearRetry(
+                remoteID
+            );
+
+            gasPost({
+                action:"connected",
+                requestId:requestId,
+                from:myID
+            });
+
+            return;
+        }
+
+        if(
+            state === "failed" ||
+            state === "closed"
+        ){
+
+            cleanupConnection(
+                remoteID,
+                true
+            );
+
+            savePairState(
+                remoteID,
+                "failed",
+                requestId
+            );
+
+            scheduleRetry(
+                remoteID
+            );
+        }
+    };
+
+    pc.oniceconnectionstatechange = ()=>{
+
+        logProcess(
+            `[ICE] ${remoteID} → ${pc.iceConnectionState}`
+        );
+
+        if(
+            pc.iceConnectionState === "failed"
+        ){
+
+            logProcess(
+                `[ICE] gagal ${remoteID}`
+            );
+        }
+    };
+
+    pc.ondatachannel = event => {
+
+        const channel =
+            event.channel;
+
+        connection.channel =
+            channel;
+
+        setupDataChannel(
+            remoteID,
+            channel,
+            requestId
+        );
+    };
+
+    return connection;
+}
+
+
+/* =========================================================
+   DATA CHANNEL
+========================================================= */
+
+function setupDataChannel(
+    remoteID,
+    channel,
+    requestId
+){
+
+    channel.onopen = ()=>{
+
+        logProcess(
+            `[CHANNEL] OPEN ${remoteID}`
+        );
+
+        if(
+            connections[remoteID]
+        ){
+
+            connections[
+                remoteID
+            ].channel = channel;
+        }
+
+        savePairState(
+            remoteID,
+            "connected",
+            requestId
+        );
+
+        clearRetry(
+            remoteID
+        );
+
+        gasPost({
+            action:"connected",
+            requestId:requestId,
+            from:myID
+        });
+
+        renderPeerList();
+
+        if(currentPeer === remoteID){
+            updateChatStatus();
+        }
+
+        toast(
+            remoteID + " terhubung"
+        );
+    };
+
+
+    channel.onclose = ()=>{
+
+        logProcess(
+            `[CHANNEL] CLOSED ${remoteID}`
+        );
+
+        renderPeerList();
+
+        if(currentPeer === remoteID){
+            updateChatStatus();
+        }
+    };
+
+
+    channel.onerror = error =>{
+
+        logProcess(
+            `[CHANNEL ERROR] ${remoteID}`
+        );
+    };
+
+
+    channel.onmessage = event =>{
+
+        receivePeerMessage(
+            remoteID,
+            event.data
+        );
+    };
+}
+
+
+function receivePeerMessage(
+    remoteID,
+    raw
+){
+
+    let data = null;
+
+    try{
+        data = JSON.parse(raw);
+    }catch(e){
+
+        data = {
+            type:"chat",
+            text:String(raw),
+            time:Date.now()
+        };
+    }
+
+    if(
+        !data ||
+        data.type !== "chat"
+    ){
+        return;
+    }
+
+    addMessage(
+        remoteID,
+        data.text || "",
+        false
+    );
+
+    if(currentPeer !== remoteID){
+
+        toast(
+            "Pesan baru dari " + remoteID
+        );
+    }
+}
+
+
+/* =========================================================
+   CREATE OFFER
+========================================================= */
+
+async function createOffer(
+    remoteID,
+    requestId
+){
+
+    if(
+        getPairRole(remoteID) !== "initiator"
+    ){
+        return;
+    }
+
+    const connection =
+        createPeer(
+            remoteID,
+            requestId
+        );
+
+    const pc =
+        connection.pc;
+
+    /*
+       Jangan membuat DataChannel dua kali.
+    */
+
+    if(
+        !connection.channel
+    ){
+
+        const channel =
+            pc.createDataChannel(
+                "chat",
+                {
+                    ordered:true
+                }
+            );
+
+        connection.channel =
+            channel;
+
+        setupDataChannel(
+            remoteID,
+            channel,
+            requestId
+        );
+    }
+
+    savePairState(
+        remoteID,
+        "offering",
+        requestId
+    );
+
+    logProcess(
+        `[OFFER] membuat offer untuk ${remoteID}`
+    );
+
+    const offer =
+        await pc.createOffer();
+
+    await pc.setLocalDescription(
+        offer
+    );
+
+    await waitICE(
+        pc
+    );
+
+    const local =
+        pc.localDescription;
+
+    const result =
+        await gasPost({
+            action:"sendOffer",
+            requestId:requestId,
+            from:myID,
+            offer:{
+                type:local.type,
+                sdp:local.sdp
+            }
+        });
+
+    if(
+        !result ||
+        result.ok === false
+    ){
+
+        throw new Error(
+            result?.error ||
+            "sendOffer gagal"
+        );
+    }
+
+    logProcess(
+        `[OFFER] terkirim ke ${remoteID}`
+    );
+}
+
+
+/* =========================================================
+   CREATE ANSWER
+========================================================= */
+
+async function createAnswer(
+    remoteID,
+    requestId,
+    offer
+){
+
+    if(
+        getPairRole(remoteID) !== "receiver"
+    ){
+        return;
+    }
+
+    const connection =
+        createPeer(
+            remoteID,
+            requestId
+        );
+
+    const pc =
+        connection.pc;
+
+    savePairState(
+        remoteID,
+        "answering",
+        requestId
+    );
+
+    logProcess(
+        `[ANSWER] menerima offer dari ${remoteID}`
+    );
+
+    await pc.setRemoteDescription(
+        new RTCSessionDescription(
+            offer
+        )
+    );
+
+    const answer =
+        await pc.createAnswer();
+
+    await pc.setLocalDescription(
+        answer
+    );
+
+    await waitICE(
+        pc
+    );
+
+    const local =
+        pc.localDescription;
+
+    const result =
+        await gasPost({
+            action:"sendAnswer",
+            requestId:requestId,
+            from:myID,
+            answer:{
+                type:local.type,
+                sdp:local.sdp
+            }
+        });
+
+    if(
+        !result ||
+        result.ok === false
+    ){
+
+        throw new Error(
+            result?.error ||
+            "sendAnswer gagal"
+        );
+    }
+
+    logProcess(
+        `[ANSWER] terkirim ke ${remoteID}`
+    );
+}
+
+
+/* =========================================================
+   ICE WAIT
+========================================================= */
+
+function waitICE(pc){
+
+    return new Promise(resolve=>{
+
+        if(
+            pc.iceGatheringState ===
+            "complete"
+        ){
+
+            resolve();
+            return;
+        }
+
+        let finished = false;
+
+        const done = ()=>{
+
+            if(finished) return;
+
+            finished = true;
+
+            pc.removeEventListener(
+                "icegatheringstatechange",
+                check
+            );
+
+            resolve();
+        };
+
+        const check = ()=>{
+
+            if(
+                pc.iceGatheringState ===
+                "complete"
+            ){
+
+                done();
+            }
+        };
+
+        pc.addEventListener(
+            "icegatheringstatechange",
+            check
+        );
+
+        setTimeout(
+            done,
+            10000
+        );
+    });
+}
+
+
+/* =========================================================
+   CLEANUP
+========================================================= */
+
+function cleanupConnection(
+    remoteID,
+    keepState=true
+){
+
+    const connection =
+        connections[remoteID];
+
+    if(!connection){
+        return;
+    }
+
+    try{
+
+        if(connection.channel){
+
+            connection.channel.onopen = null;
+            connection.channel.onclose = null;
+            connection.channel.onerror = null;
+            connection.channel.onmessage = null;
+
+            if(
+                connection.channel.readyState !==
+                "closed"
+            ){
+                connection.channel.close();
+            }
+        }
+
+    }catch(e){}
+
+
+    try{
+
+        if(connection.pc){
+
+            connection.pc.onicecandidate = null;
+            connection.pc.ondatachannel = null;
+
+            if(
+                connection.pc.connectionState !==
+                "closed"
+            ){
+                connection.pc.close();
+            }
+        }
+
+    }catch(e){}
+
+    delete connections[remoteID];
+
+    if(!keepState){
+
+        delete pairStates[remoteID];
+
+        delete requestIdsByPair[
+            getPairKey(remoteID)
+        ];
+    }
+
+    renderPeerList();
+}
+
+
+/* =========================================================
+   RETRY / BACKOFF
+========================================================= */
+
+function clearRetry(remoteID){
+
+    if(retryTimers[remoteID]){
+
+        clearTimeout(
+            retryTimers[remoteID]
+        );
+
+        delete retryTimers[remoteID];
+    }
+
+    retryCounts[remoteID] = 0;
+}
+
+
+function scheduleRetry(remoteID){
+
+    if(!remoteID) return;
+
+    if(isConnected(remoteID)){
+        return;
+    }
+
+    if(retryTimers[remoteID]){
+        return;
+    }
+
+    const count =
+        retryCounts[remoteID] || 0;
+
+    retryCounts[remoteID] =
+        Math.min(count + 1,6);
+
+    const delay =
+        Math.min(
+            10000 *
+            Math.pow(2,count),
+            60000
+        );
+
+    logProcess(
+        `[RETRY] ${remoteID} dalam ${
+            Math.round(delay/1000)
+        } detik`
+    );
+
+    retryTimers[remoteID] =
+        setTimeout(async()=>{
+
+            delete retryTimers[remoteID];
+
+            if(
+                document.getElementById(
+                    "autoConnect"
+                ).checked
+            ){
+
+                if(
+                    getPairRole(remoteID) ===
+                    "initiator"
+                ){
+
+                    await requestConnection(
+                        remoteID,
+                        true
+                    );
+                }
+            }
+
+        },delay);
+}
+
+
+/* =========================================================
+   AUTO CONNECT
+========================================================= */
+
+async function autoConnectMissingUsers(){
+
+    const checkbox =
+        document.getElementById(
+            "autoConnect"
+        );
+
+    if(
+        !checkbox ||
+        !checkbox.checked
+    ){
+        return;
+    }
+
+    for(
+        const remoteID
+        of onlineUsersCache
+    ){
+
+        if(!remoteID || remoteID === myID){
+            continue;
+        }
+
+        if(isConnected(remoteID)){
+            continue;
+        }
+
+        if(isNegotiating(remoteID)){
+            continue;
+        }
+
+        /*
+           Hanya ID terkecil yang mengirim request.
+        */
+
+        if(
+            getPairRole(remoteID) !==
+            "initiator"
+        ){
+            continue;
+        }
+
+        /*
+           Beri sedikit jeda antar peer.
+        */
+
+        await requestConnection(
+            remoteID,
+            true
+        );
+    }
+}
+
+
+/* =========================================================
+   INCOMING REQUEST UI
+========================================================= */
+
+function renderIncoming(){
+
+    const list =
+        document.getElementById(
+            "incomingList"
+        );
+
+    if(!list) return;
+
+    const ids =
+        Object.keys(
+            incomingRequests
+        );
+
+    if(!ids.length){
+
+        list.innerHTML = `
+            <div class="no-request">
+                Tidak ada permintaan koneksi.
+            </div>
+        `;
+
+        return;
+    }
+
+    list.innerHTML = "";
+
+    ids.forEach(requestId=>{
+
+        const signal =
+            incomingRequests[requestId];
+
+        if(!signal) return;
+
+        const item =
+            document.createElement("div");
+
+        item.className =
+            "incoming-item";
+
+        item.innerHTML = `
+            <div class="incoming-avatar">
+                👤
+            </div>
+
+            <div class="incoming-info">
+
+                <div class="incoming-name">
+                    ${escapeHTML(signal.from)}
+                </div>
+
+                <div class="incoming-time">
+                    Ingin terhubung dengan Anda
+                </div>
+
+            </div>
+
+            <div class="incoming-actions">
+
+                <button
+                    class="reject-btn"
+                    data-action="reject">
+                    Tolak
+                </button>
+
+                <button
+                    class="accept-btn"
+                    data-action="accept">
+                    Terima
+                </button>
+
+            </div>
+        `;
+
+        item.querySelector(
+            '[data-action="reject"]'
+        ).onclick = ()=>{
+            rejectRequest(requestId);
+        };
+
+        item.querySelector(
+            '[data-action="accept"]'
+        ).onclick = ()=>{
+            acceptRequest(requestId);
+        };
+
+        list.appendChild(item);
+    });
+}
+
+
+function openRequestModal(){
+
+    renderIncoming();
+
+    document
+        .getElementById("requestModal")
+        .classList.add("show");
+}
+
+
+function closeRequestModal(){
+
+    document
+        .getElementById("requestModal")
+        .classList.remove("show");
+}
+
+
+/* =========================================================
+   REQUEST PAGE
+========================================================= */
+
+function renderRequestPage(){
+
+    const list =
+        document.getElementById(
+            "requestList"
+        );
+
+    if(!list) return;
+
+    const ids =
+        Object.keys(
+            incomingRequests
+        );
+
+    if(!ids.length){
+
+        list.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">👥</div>
+                <h2>Tidak ada request</h2>
+                <p>
+                    Permintaan koneksi yang masuk
+                    akan muncul di sini.
+                </p>
+            </div>
+        `;
+
+        return;
+    }
+
+    list.innerHTML = "";
+
+    ids.forEach(requestId=>{
+
+        const signal =
+            incomingRequests[requestId];
+
+        if(!signal) return;
+
+        const item =
+            document.createElement("div");
+
+        item.className =
+            "request-item";
+
+        item.innerHTML = `
+            <div class="request-avatar">
+                👤
+            </div>
+
+            <div class="request-info">
+                <div class="request-name">
+                    ${escapeHTML(signal.from)}
+                </div>
+
+                <div class="request-desc">
+                    Meminta koneksi P2P
+                </div>
+            </div>
+
+            <div class="request-actions">
+
+                <button
+                    class="reject-btn">
+                    Tolak
+                </button>
+
+                <button
+                    class="accept-btn">
+                    Terima
+                </button>
+
+            </div>
+        `;
+
+        item.querySelector(
+            ".reject-btn"
+        ).onclick = ()=>{
+            rejectRequest(requestId);
+        };
+
+        item.querySelector(
+            ".accept-btn"
+        ).onclick = ()=>{
+            acceptRequest(requestId);
+        };
+
+        list.appendChild(item);
+    });
+}
+
+
+function updateRequestBadges(){
+
+    const count =
+        Object.keys(
+            incomingRequests
+        ).length;
+
+    [
+        "requestBadge",
+        "requestBadge2",
+        "requestBadge3"
+    ].forEach(id=>{
+
+        const el =
+            document.getElementById(id);
+
+        if(!el) return;
+
+        if(count){
+
+            el.textContent =
+                count > 99 ? "99+" : count;
+
+            el.style.display =
+                "flex";
+
+        }else{
+
+            el.style.display =
+                "none";
+        }
+    });
+}
+
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+
+function loadSettings(){
+
+    /*
+       DEFAULT KEDUA CHECKBOX = TRUE
+    */
+
+    const savedAccept =
+        localStorage.getItem(
+            "p2p_auto_accept"
+        );
+
+    const savedConnect =
+        localStorage.getItem(
+            "p2p_auto_connect"
+        );
+
+    const autoAccept =
+        document.getElementById(
+            "autoAccept"
+        );
+
+    const autoConnect =
+        document.getElementById(
+            "autoConnect"
+        );
+
+    autoAccept.checked =
+        savedAccept === null
+            ? true
+            : savedAccept === "true";
+
+    autoConnect.checked =
+        savedConnect === null
+            ? true
+            : savedConnect === "true";
+}
+
+
+function saveSettings(){
+
+    localStorage.setItem(
+        "p2p_auto_accept",
+        document.getElementById(
+            "autoAccept"
+        ).checked
+    );
+
+    localStorage.setItem(
+        "p2p_auto_connect",
+        document.getElementById(
+            "autoConnect"
+        ).checked
+    );
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+async function resetID(){
+
+    const confirmReset =
+        confirm(
+            "Reset ID perangkat?\n\nID lama tidak akan digunakan lagi."
+        );
+
+    if(!confirmReset){
+        return;
+    }
+
+    sendOffline();
+
+    localStorage.removeItem(
+        "p2p_my_id"
+    );
+
+    location.reload();
+}
+
+
+/* =========================================================
+   COPY ID
+========================================================= */
+
+async function copyMyID(){
+
+    try{
+
+        await navigator.clipboard.writeText(
+            myID
+        );
+
+        toast(
+            "ID berhasil disalin"
+        );
+
+    }catch(e){
+
+        const area =
+            document.createElement("textarea");
+
+        area.value = myID;
+
+        document.body.appendChild(area);
+
+        area.select();
+
+        document.execCommand("copy");
+
+        area.remove();
+
+        toast(
+            "ID berhasil disalin"
+        );
+    }
+}
+
+
+/* =========================================================
+   START
+========================================================= */
+
+async function start(){
+
+    loadID();
+
+    loadMessages();
+
+    loadSettings();
+
+    logProcess(
+        `[START] ID saya ${myID}`
+    );
+
+    logProcess(
+        `[ROLE] deterministic pair role aktif`
+    );
+
+    logProcess(
+        `[AUTO] auto accept = ${
+            document.getElementById(
+                "autoAccept"
+            ).checked
+        }`
+    );
+
+    logProcess(
+        `[AUTO] auto connect = ${
+            document.getElementById(
+                "autoConnect"
+            ).checked
+        }`
+    );
+
+    await sendHeartbeat();
+
+    await pollOnline();
+
+    await pollSignals();
+
+    renderPeerList();
+
+    renderRequestPage();
+
+    renderIncoming();
+
+    updateRequestBadges();
+
+    /*
+       Heartbeat setiap 5 detik
+    */
+
+    heartbeatTimer =
+        setInterval(
+            sendHeartbeat,
+            5000
+        );
+
+    /*
+       Online user setiap 5 detik
+    */
+
+    pollOnlineTimer =
+        setInterval(
+            pollOnline,
+            5000
+        );
+
+    /*
+       Signal setiap 2.5 detik
+    */
+
+    pollSignalTimer =
+        setInterval(
+            pollSignals,
+            2500
+        );
+
+    /*
+       Auto connect.
+       Lebih lambat daripada polling agar GAS tidak dibanjiri request.
+    */
+
+    autoConnectTimer =
+        setInterval(
+            autoConnectMissingUsers,
+            7000
+        );
+
+    /*
+       Jalankan sekali setelah startup.
+    */
+
+    setTimeout(
+        autoConnectMissingUsers,
+        2500
+    );
+
+    logProcess(
+        "[START] sistem siap"
+    );
+}
+
+
+/* =========================================================
+   EVENTS
+========================================================= */
+
+document
+    .getElementById("navChat")
+    .onclick = ()=>{
+        openHome();
+    };
+
+document
+    .getElementById("navRequest")
+    .onclick = ()=>{
+        openRequests();
+    };
+
+document
+    .getElementById("navSettings")
+    .onclick = ()=>{
+        openSettings();
+    };
+
+document
+    .getElementById("navChat2")
+    .onclick = ()=>{
+        openHome();
+    };
+
+document
+    .getElementById("navSettings2")
+    .onclick = ()=>{
+        openSettings();
+    };
+
+document
+    .getElementById("navChat3")
+    .onclick = ()=>{
+        openHome();
+    };
+
+document
+    .getElementById("navRequest3")
+    .onclick = ()=>{
+        openRequests();
+    };
+
+
+document
+    .getElementById("settingsTopBtn")
+    .onclick = ()=>{
+        openSettings();
+    };
+
+
+document
+    .getElementById("requestTopBtn")
+    .onclick = ()=>{
+
+        if(
+            Object.keys(
+                incomingRequests
+            ).length
+        ){
+
+            openRequestModal();
+
+        }else{
+
+            openRequests();
+        }
+    };
+
+
+document
+    .getElementById("chatBackBtn")
+    .onclick = ()=>{
+        closeChat();
+    };
+
+
+document
+    .getElementById("chatMenuBtn")
+    .onclick = ()=>{
+
+        openSettings();
+
+    };
+
+
+document
+    .getElementById("requestRefreshBtn")
+    .onclick = async()=>{
+
+        await pollSignals();
+        renderRequestPage();
+        updateRequestBadges();
+
+        toast(
+            "Request diperbarui"
+        );
+    };
+
+
+document
+    .getElementById("closeRequestModal")
+    .onclick = ()=>{
+        closeRequestModal();
+    };
+
+
+document
+    .getElementById("requestModal")
+    .addEventListener(
+        "click",
+        event=>{
+
+            if(
+                event.target.id ===
+                "requestModal"
+            ){
+
+                closeRequestModal();
+            }
+        }
+    );
+
+
+document
+    .getElementById("copyMyIdBtn")
+    .onclick = ()=>{
+        copyMyID();
+    };
+
+
+document
+    .getElementById("logBtn")
+    .onclick = ()=>{
+        openLogs();
+    };
+
+
+document
+    .getElementById("logBackBtn")
+    .onclick = ()=>{
+        openSettings();
+    };
+
+
+document
+    .getElementById("clearLogBtn")
+    .onclick = ()=>{
+
+        logs = [];
+
+        document
+            .getElementById(
+                "logContent"
+            )
+            .innerHTML = "";
+    };
+
+
+document
+    .getElementById("resetBtn")
+    .onclick = ()=>{
+        resetID();
+    };
+
+
+document
+    .getElementById("autoAccept")
+    .addEventListener(
+        "change",
+        async function(){
+
+            saveSettings();
+
+            logProcess(
+                `[SETTING] auto accept = ${this.checked}`
+            );
+
+            /*
+               Jika baru dinyalakan,
+               langsung proses semua request yang sudah antre.
+            */
+
+            if(this.checked){
+
+                const ids =
+                    Object.keys(
+                        incomingRequests
+                    );
+
+                for(
+                    const requestId
+                    of ids
+                ){
+
+                    await acceptRequest(
+                        requestId
+                    );
+                }
+            }
+        }
+    );
+
+
+document
+    .getElementById("autoConnect")
+    .addEventListener(
+        "change",
+        function(){
+
+            saveSettings();
+
+            logProcess(
+                `[SETTING] auto connect = ${this.checked}`
+            );
+
+            if(this.checked){
+
+                autoConnectMissingUsers();
+            }
+        }
+    );
+
+
+document
+    .getElementById("searchInput")
+    .addEventListener(
+        "input",
+        renderPeerList
+    );
+
+
+document
+    .getElementById("sendBtn")
+    .onclick = ()=>{
+        sendCurrentMessage();
+    };
+
+
+document
+    .getElementById("messageInput")
+    .addEventListener(
+        "keydown",
+        function(event){
+
+            if(
+                event.key === "Enter" &&
+                !event.shiftKey
+            ){
+
+                event.preventDefault();
+
+                sendCurrentMessage();
+            }
+        }
+    );
+
+
+document
+    .getElementById("messageInput")
+    .addEventListener(
+        "input",
+        function(){
+
+            this.style.height =
+                "auto";
+
+            this.style.height =
+                Math.min(
+                    this.scrollHeight,
+                    95
+                ) + "px";
+        }
+    );
+
+
+document
+    .getElementById("emojiBtn")
+    .onclick = ()=>{
+
+        const input =
+            document.getElementById(
+                "messageInput"
+            );
+
+        const start =
+            input.selectionStart;
+
+        const end =
+            input.selectionEnd;
+
+        input.value =
+            input.value.substring(
+                0,start
+            ) +
+            "😊" +
+            input.value.substring(
+                end
+            );
+
+        input.focus();
+
+        input.selectionStart =
+            input.selectionEnd =
+                start + 2;
+    };
+
+
+/* =========================================================
+   BACKGROUND / VISIBILITY
+========================================================= */
+
+document.addEventListener(
+    "visibilitychange",
+    ()=>{
+
+        if(
+            document.visibilityState ===
+            "visible"
+        ){
+
+            sendHeartbeat();
+
+            pollOnline();
+
+            pollSignals();
+
+            renderPeerList();
+        }
+    }
+);
+
+
+/* =========================================================
+   BEFORE UNLOAD
+========================================================= */
+
+window.addEventListener(
+    "beforeunload",
+    ()=>{
+        sendOffline();
+    }
+);
+
+
+/* =========================================================
+   START APPLICATION
+========================================================= */
+
+start();
+
+</script>
+
+</body>
+</html>
