@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>P2P Multi Peer Connect</title>
+
+<style>
+
+body{
+    font-family:Arial;
+    margin:20px;
+}
+
+.box{
+    border:1px solid #ccc;
+    padding:15px;
+    margin-bottom:15px;
+    border-radius:8px;
+}
+
+textarea{
+    width:100%;
+    height:160px;
+}
+
+button{
+    padding:10px 20px;
+}
+
+input{
+    padding:8px;
+}
+
+
+#chatBox{
+    height:250px;
+    overflow:auto;
+    border:1px solid #ccc;
+    padding:10px;
+    background:#fafafa;
+}
+
+
+.chat{
+    background:#eee;
+    margin:5px;
+    padding:8px;
+    border-radius:6px;
+}
+
+
+.chat.me{
+    background:#d8ffd8;
+    text-align:right;
+}
+
+
+.name{
+    font-weight:bold;
+}
+
+
+.time{
+    font-size:11px;
+    color:#777;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<h2>
+WebRTC Multi Peer P2P
+</h2>
+
+
+
+<div class="box">
+
+ID Saya:
+
+<b id="myID"></b>
+
+
+<br><br>
+
+Status:
+
+<div id="status">
+Waiting
+</div>
+
+
+</div>
+
+
+
+
+<div class="box">
+
+<h3>
+Session
+</h3>
+
+
+<textarea id="session"
+placeholder="
+Kosongkan untuk membuat koneksi baru.
+Paste session peer untuk menerima koneksi.
+">
+</textarea>
+
+
+<br>
+
+
+<button onclick="connectSession()">
+CONNECT
+</button>
+
+
+</div>
+
+
+
+
+
+<div class="box">
+
+
+<h3>
+Connected Peers
+</h3>
+
+
+<div id="peers">
+-
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="box">
+
+
+<h3>
+Chat Broadcast
+</h3>
+
+
+<div id="chatBox">
+
+</div>
+
+
+<br>
+
+
+<input id="message"
+placeholder="Pesan"
+style="width:70%">
+
+
+<button onclick="broadcast()">
+SEND
+</button>
+
+
+</div>
+
+
+
+
+
+<script>
+
+
+// =======================
+// ID OTOMATIS
+// =======================
+
+
+const myID =
+Math.random()
+.toString(36)
+.substring(2,8)
+.toUpperCase();
+
+
+
+document
+.getElementById("myID")
+.innerHTML=myID;
+
+
+
+
+let connections={};
+
+
+
+
+
+// =======================
+// STATUS
+// =======================
+
+
+function showStatus(t){
+
+document
+.getElementById("status")
+.innerHTML=t;
+
+}
+
+
+
+
+function updatePeers(){
+
+
+let html="";
+
+
+Object.keys(connections)
+.forEach(id=>{
+
+
+html +=
+`
+<div>
+${id}
+:
+${connections[id].pc.connectionState}
+</div>
+`;
+
+
+});
+
+
+document
+.getElementById("peers")
+.innerHTML =
+html || "-";
+
+
+}
+
+
+
+
+// =======================
+// CREATE PEER
+// =======================
+
+
+function createPeer(id){
+
+
+let pc =
+new RTCPeerConnection({
+
+iceServers:[
+
+{
+urls:
+"stun:stun.l.google.com:19302"
+}
+
+]
+
+});
+
+
+
+let obj={
+
+pc:pc,
+
+channel:null
+
+};
+
+
+
+connections[id]=obj;
+
+
+
+pc.onconnectionstatechange=()=>{
+
+
+updatePeers();
+
+
+};
+
+
+
+
+pc.ondatachannel=e=>{
+
+
+setupChannel(
+id,
+e.channel
+);
+
+
+};
+
+
+
+return obj;
+
+
+}
+
+
+
+
+
+function setupChannel(id,ch){
+
+
+connections[id].channel=ch;
+
+
+
+ch.onopen=()=>{
+
+
+showStatus(
+"CONNECTED "+id
+);
+
+
+updatePeers();
+
+
+};
+
+
+
+ch.onmessage=e=>{
+
+
+let data =
+JSON.parse(e.data);
+
+
+
+if(data.type==="chat"){
+
+showMessage(data);
+
+}
+
+
+};
+
+
+
+}
+
+
+
+
+
+
+// =======================
+// CONNECT ONE BUTTON
+// =======================
+
+
+async function connectSession(){
+
+
+
+let box =
+document.getElementById("session");
+
+
+
+
+// kosong = buat offer
+
+if(box.value.trim()===""){
+
+
+
+let temp =
+"TMP_"+Date.now();
+
+
+
+let obj =
+createPeer(temp);
+
+
+
+let ch =
+obj.pc.createDataChannel(
+"chat"
+);
+
+
+
+setupChannel(
+temp,
+ch
+);
+
+
+
+
+let offer =
+await obj.pc.createOffer();
+
+
+
+await obj.pc.setLocalDescription(
+offer
+);
+
+
+
+await waitICE(obj.pc);
+
+
+
+
+box.value =
+JSON.stringify({
+
+type:"offer",
+
+from:myID,
+
+sdp:
+obj.pc.localDescription
+
+
+},null,2);
+
+
+
+showStatus(
+"Offer dibuat"
+);
+
+
+
+return;
+
+}
+
+
+
+// ada isi = proses
+
+
+let data =
+JSON.parse(
+box.value
+);
+
+
+
+
+// TERIMA OFFER
+
+if(data.type==="offer"){
+
+
+
+let remote =
+data.from;
+
+
+
+let obj =
+createPeer(remote);
+
+
+
+
+await obj.pc.setRemoteDescription(
+data.sdp
+);
+
+
+
+let answer =
+await obj.pc.createAnswer();
+
+
+
+await obj.pc.setLocalDescription(
+answer
+);
+
+
+
+await waitICE(obj.pc);
+
+
+
+box.value =
+JSON.stringify({
+
+type:"answer",
+
+from:myID,
+
+to:remote,
+
+sdp:
+obj.pc.localDescription
+
+
+},null,2);
+
+
+
+showStatus(
+"Answer dibuat"
+);
+
+
+
+}
+
+
+
+
+
+
+// TERIMA ANSWER
+
+else if(data.type==="answer"){
+
+
+
+let temp =
+Object.keys(connections)
+.find(
+x=>x.startsWith("TMP")
+);
+
+
+
+if(!temp){
+
+showStatus(
+"Offer tidak ditemukan"
+);
+
+return;
+
+}
+
+
+
+let obj =
+connections[temp];
+
+
+
+await obj.pc.setRemoteDescription(
+data.sdp
+);
+
+
+
+connections[data.from]=obj;
+
+
+delete connections[temp];
+
+
+
+showStatus(
+"CONNECTED "+data.from
+);
+
+
+
+updatePeers();
+
+
+
+}
+
+
+
+}
+
+
+
+
+
+
+
+// =======================
+// CHAT
+// =======================
+
+
+
+function broadcast(){
+
+
+
+let text =
+document
+.getElementById("message")
+.value;
+
+
+
+if(!text)
+return;
+
+
+
+let data={
+
+type:"chat",
+
+from:myID,
+
+time:
+new Date()
+.toLocaleTimeString(),
+
+
+message:text
+
+
+};
+
+
+
+showMessage(data);
+
+
+
+Object.values(connections)
+.forEach(p=>{
+
+
+if(
+p.channel &&
+p.channel.readyState==="open"
+){
+
+p.channel.send(
+JSON.stringify(data)
+);
+
+}
+
+
+});
+
+
+
+document
+.getElementById("message")
+.value="";
+
+
+}
+
+
+
+
+
+function showMessage(data){
+
+
+let box =
+document
+.getElementById("chatBox");
+
+
+
+let div =
+document.createElement("div");
+
+
+
+div.className="chat";
+
+
+
+if(data.from===myID){
+
+div.classList.add("me");
+
+}
+
+
+
+div.innerHTML=
+
+`
+<div class="name">
+${data.from}
+</div>
+
+<div>
+${data.message}
+</div>
+
+<div class="time">
+${data.time}
+</div>
+`;
+
+
+
+box.appendChild(div);
+
+
+box.scrollTop =
+box.scrollHeight;
+
+
+}
+
+
+
+
+
+
+
+// =======================
+// WAIT ICE
+// =======================
+
+
+function waitICE(pc){
+
+
+return new Promise(resolve=>{
+
+
+if(
+pc.iceGatheringState==="complete"
+){
+
+resolve();
+
+return;
+
+}
+
+
+
+pc.onicegatheringstatechange=()=>{
+
+
+if(
+pc.iceGatheringState==="complete"
+){
+
+resolve();
+
+}
+
+
+};
+
+
+
+});
+
+
+}
+
+
+
+</script>
+
+
+</body>
+
+</html>
