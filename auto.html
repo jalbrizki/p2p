@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebRTC P2P Chat</title>
+<style>
+*{box-sizing:border-box;}body{margin:0;font-family:Arial,sans-serif;background:#f2f4f7;color:#222;}.container{max-width:700px;margin:auto;padding:15px;}.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 3px 12px rgba(0,0,0,.08);}h1{margin:0 0 15px;font-size:22px;}h2{margin:0 0 10px;font-size:17px;}.status{background:#f1f3f4;border-radius:9px;padding:10px;font-size:13px;margin-bottom:12px;}.myid{font-size:28px;font-weight:bold;letter-spacing:2px;margin:5px 0 12px;}button{border:0;border-radius:9px;padding:10px 14px;cursor:pointer;background:#222;color:#fff;font-weight:bold;}button:disabled{opacity:.55;cursor:not-allowed;}button.blue{background:#1769aa;}button.success{background:#16803c;}button.danger{background:#c62828;}button.secondary{background:#e8eaed;color:#222;}.row{display:flex;gap:8px;flex-wrap:wrap;}.notice{color:#666;font-size:12px;line-height:1.5;}.user-list{display:flex;flex-direction:column;gap:8px;}.user-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px;border:1px solid #eee;border-radius:10px;}.user-left{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:bold;}.dot{width:10px;height:10px;background:#20a050;border-radius:50%;flex-shrink:0;}.peer{padding:9px 10px;background:#eef7ee;border-radius:8px;margin-bottom:7px;font-size:13px;}.chat{min-height:180px;max-height:400px;overflow:auto;background:#fafafa;border-radius:10px;padding:10px;}.msg{padding:8px 10px;margin-bottom:7px;border-radius:9px;background:#eee;}.msg.me{background:#dceeff;}.msg small{display:block;font-size:10px;opacity:.6;margin-bottom:3px;}.chat-input{display:flex;gap:7px;margin-top:8px;}.chat-input input{flex:1;min-width:0;padding:11px;border:1px solid #ddd;border-radius:9px;}textarea{width:100%;min-height:150px;resize:vertical;border:1px solid #ddd;border-radius:10px;padding:12px;font-family:monospace;font-size:13px;}label{display:block;font-size:13px;font-weight:bold;margin-bottom:6px;}.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:15px;z-index:9999;}.modal.show{display:flex;}.modal-box{background:#fff;width:100%;max-width:420px;border-radius:15px;padding:20px;box-shadow:0 10px 35px rgba(0,0,0,.25);}.modal-title{font-size:20px;font-weight:bold;margin-bottom:10px;}.modal-info{font-size:14px;line-height:1.5;margin-bottom:18px;}.modal-buttons{display:flex;gap:8px;}.modal-buttons button{flex:1;}.connection-animation{text-align:center;padding:10px 0;font-size:14px;color:#666;}.hidden{display:none!important;}@media(max-width:500px){.container{padding:10px;}.user-item{align-items:flex-start;}.user-item button{padding:8px 10px;font-size:12px;}.chat-input{flex-direction:column;}.chat-input button{width:100%;}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>🌐 WebRTC P2P Chat</h1>
+    <div id="status" class="status">Menyiapkan aplikasi...</div>
+    <label>ID ANDA</label>
+    <div id="myID" class="myid">------</div>
+    <div class="row">
+      <button class="secondary" onclick="copyID()">COPY ID</button>
+      <button class="danger" onclick="resetData()">RESET DATA</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>👥 USER AKTIF</h2>
+    <div class="notice">User yang aktif akan muncul di sini. Tekan HUBUNGI untuk memulai koneksi P2P.</div><br>
+    <div id="onlineUsers" class="user-list">Memuat user...</div>
+  </div>
+  <div class="card">
+    <h2>🔗 PEER TERHUBUNG</h2>
+    <div id="peerList"><div class="notice">Belum ada peer yang terhubung.</div></div>
+  </div>
+  <div class="card">
+    <h2>💬 CHAT</h2>
+    <div id="chat" class="chat"></div>
+    <div class="chat-input">
+      <input id="message" type="text" placeholder="Tulis pesan..." onkeydown="handleEnter(event)">
+      <button onclick="broadcast()">KIRIM</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>🛠️ SESSION MANUAL</h2>
+    <div class="notice">Fitur ini hanya sebagai fallback jika signaling otomatis bermasalah. Untuk penggunaan normal, cukup gunakan tombol HUBUNGI.</div><br>
+    <textarea id="session" placeholder="Offer / Answer WebRTC..."></textarea><br><br>
+    <div class="row">
+      <button onclick="copySession()">COPY</button>
+      <button class="secondary" onclick="pasteSession()">PASTE</button>
+      <button class="secondary" onclick="clearSession()">HAPUS</button>
+      <button class="secondary" onclick="selectSession()">PILIH SEMUA</button>
+      <button class="blue" onclick="manualConnect()">GENERATE</button>
+    </div>
+  </div>
+</div>
+<div id="requestModal" class="modal"><div class="modal-box"><div class="modal-title">🔔 Permintaan Koneksi</div><div id="requestInfo" class="modal-info"></div><div class="modal-buttons"><button class="success" onclick="acceptRequest()">TERIMA</button><button class="danger" onclick="rejectRequest()">TOLAK</button></div></div></div>
+<div id="connectingModal" class="modal"><div class="modal-box"><div class="modal-title">🔄 Menghubungkan</div><div id="connectingInfo" class="modal-info"></div><div class="connection-animation">⏳ Proses WebRTC sedang berlangsung...</div></div></div>
+<script>
+const GAS_URL = "https://script.google.com/macros/s/AKfycbx503tuFMON6njMTIJZogTuQGZYIjIoJZIfmn1Q1slBUAmJGA3VczzZosSAv2GYxtkO-Q/exec";
+const MY_ID_KEY = "webrtc_p2p_myID"; const SESSION_KEY = "webrtc_p2p_session"; const PEERS_KEY = "webrtc_p2p_peers"; const CHAT_KEY = "webrtc_p2p_chat";
+const HEARTBEAT_INTERVAL = 5000; const ONLINE_INTERVAL = 5000; const SIGNAL_INTERVAL = 2500;
+let myID = localStorage.getItem(MY_ID_KEY);
+if(!myID){ myID = crypto.randomUUID().replace(/-/g,"").substring(0,6).toUpperCase(); localStorage.setItem(MY_ID_KEY,myID); }
+document.getElementById("myID").textContent = myID;
+let connections = {}; let pendingConnections = {}; let knownSignals = {}; let incomingRequest = null; let onlineUsersCache = [];
+function showStatus(text){ document.getElementById("status").textContent = text; }
+async function gasPost(data){ if(!GAS_URL || GAS_URL.includes("MASUKKAN_URL")){ return { ok:false, error:"URL GAS belum diatur" }; } try{ const response = await fetch(GAS_URL,{ method:"POST", headers:{ "Content-Type":"text/plain;charset=utf-8" }, body:JSON.stringify(data) }); return await response.json(); }catch(error){ console.error("GAS POST ERROR:", error); return { ok:false, error:error.message }; } }
+async function gasGet(params){ if(!GAS_URL || GAS_URL.includes("MASUKKAN_URL")){ return { ok:false, error:"URL GAS belum diatur" }; } try{ const query = new URLSearchParams(params); const response = await fetch(GAS_URL + "?" + query.toString()); return await response.json(); }catch(error){ console.error("GAS GET ERROR:", error); return { ok:false, error:error.message }; } }
+async function sendHeartbeat(){ if(!GAS_URL || GAS_URL.includes("MASUKKAN_URL")){ return; } await gasPost({ action:"heartbeat", id:myID }); }
+async function loadOnlineUsers(){ if(!GAS_URL || GAS_URL.includes("MASUKKAN_URL")){ return; } const result = await gasGet({ action:"online", t:Date.now() }); if(!result.ok){ return; } onlineUsersCache = result.users || []; renderOnlineUsers(onlineUsersCache); }
+function renderOnlineUsers(users){ const box = document.getElementById("onlineUsers"); if(!users.length){ box.innerHTML = "<div class='notice'>Belum ada user aktif.</div>"; return; } box.innerHTML = ""; users.forEach(user => { const item = document.createElement("div"); item.className = "user-item"; const left = document.createElement("div"); left.className = "user-left"; const dot = document.createElement("span"); dot.className = "dot"; const text = document.createElement("span"); text.textContent = user.id === myID? user.id + " (Anda)" : user.id; left.appendChild(dot); left.appendChild(text); const actions = document.createElement("div"); if(user.id === myID){ const btn = document.createElement("button"); btn.className = "secondary"; btn.disabled = true; btn.textContent = "ANDA"; actions.appendChild(btn); }else{ const connection = connections[user.id]; const connected = connection && connection.channel && connection.channel.readyState === "open"; const connecting = Object.values(pendingConnections).some(p => p.remoteID === user.id); const btn = document.createElement("button"); if(connected){ btn.className = "success"; btn.textContent = "TERHUBUNG"; btn.disabled = true; }else if(connecting){ btn.className = "secondary"; btn.textContent = "MENGHUBUNGKAN..."; btn.disabled = true; }else{ btn.className = "blue"; btn.textContent = "HUBUNGI"; btn.onclick = () => requestConnection(user.id); } actions.appendChild(btn); } item.appendChild(left); item.appendChild(actions); box.appendChild(item); }); }
+async function requestConnection(remoteID){ if(remoteID === myID){ return; } if(connections[remoteID] && connections[remoteID].channel && connections[remoteID].channel.readyState === "open"){ showStatus("Sudah terhubung dengan " + remoteID); return; } showStatus("📤 Mengirim permintaan ke " + remoteID + "..."); renderOnlineUsers(onlineUsersCache); const result = await gasPost({ action:"request", from:myID, to:remoteID }); if(!result.ok){ alert(result.error || "Gagal mengirim permintaan."); showStatus("Gagal menghubungi " + remoteID); return; } const requestId = result.requestId; pendingConnections[requestId] = { remoteID:remoteID, role:"initiator", pc:null, channel:null }; showStatus("⏳ Menunggu " + remoteID + " menerima permintaan..."); renderOnlineUsers(onlineUsersCache); }
+async function acceptRequest(){ if(!incomingRequest){ return; } const signal = incomingRequest; closeModal("requestModal"); pendingConnections[signal.requestId] = { remoteID:signal.from, role:"receiver", pc:null, channel:null }; showConnecting(signal.from); const result = await gasPost({ action:"accept", requestId: signal.requestId, to:myID }); if(!result.ok){ closeModal("connectingModal"); alert(result.error || "Gagal menerima request."); return; } showStatus("🔄 Menunggu offer dari " + signal.from + "..."); incomingRequest = null; }
+async function rejectRequest(){ if(!incomingRequest){ return; } const requestId = incomingRequest.requestId; closeModal("requestModal"); await gasPost({ action:"reject", requestId:requestId, to:myID }); incomingRequest = null; showStatus("Permintaan koneksi ditolak."); }
+async function pollSignals(){ if(!GAS_URL || GAS_URL.includes("MASUKKAN_URL")){ return; } const result = await gasGet({ action:"signals", id:myID, t:Date.now() }); if(!result.ok){ return; } const signals = result.signals || []; for(const signal of signals){ const previous = knownSignals[signal.requestId]; knownSignals[signal.requestId] = signal.status; await processSignal(signal, previous); } }
+async function processSignal(signal, previous){
+  if(signal.to === myID && signal.status === "request" && previous!== "request"){
+    if(incomingRequest){ return; }
+    if(connections[signal.from] && connections[signal.from].channel && connections[signal.from].channel.readyState === "open"){ return; }
+    incomingRequest = signal;
+    document.getElementById("requestInfo").textContent = "ID " + signal.from + " ingin terhubung dengan Anda.";
+    showModal("requestModal"); return;
+  }
+  if(signal.from === myID && signal.status === "accepted" && previous!== "accepted"){
+    const pending = pendingConnections[signal.requestId];
+    if(!pending){ return; }
+    await createOfferForRequest(signal); return;
+  }
+  if(signal.to === myID && signal.status === "offer" && signal.offer && previous!== "offer"){
+    await handleIncomingOffer(signal); return;
+  }
+  if(signal.from === myID && signal.status === "answer" && signal.answer && previous!== "answer"){
+    await handleIncomingAnswer(signal); return;
+  }
+  if(signal.from === myID && signal.status === "rejected" && previous!== "rejected"){
+    const remoteID = signal.to;
+    delete pendingConnections[signal.requestId];
+    alert("ID " + remoteID + " menolak permintaan koneksi.");
+    showStatus("Permintaan ditolak oleh " + remoteID);
+    renderOnlineUsers(onlineUsersCache);
+    await deleteSignal(signal.requestId); return;
+  }
+}
+async function createOfferForRequest(signal){ const requestId = signal.requestId; const remoteID = signal.to; showConnecting(remoteID); showStatus("🔄 Membuat offer untuk " + remoteID + "..."); try{ const pc = createPeer(remoteID); const channel = pc.createDataChannel("chat"); setupChannel(remoteID, channel); pendingConnections[requestId] = { remoteID:remoteID, role:"initiator", pc:pc, channel:channel }; const offer = await pc.createOffer(); await pc.setLocalDescription(offer); await waitICE(pc); const local = pc.localDescription; const result = await gasPost({ action:"sendOffer", requestId: requestId, from:myID, offer:{ type: local.type, sdp: local.sdp } }); if(!result.ok){ throw new Error(result.error || "Offer gagal dikirim."); } showStatus("📤 Offer dikirim ke " + remoteID); }catch(error){ console.error(error); closeModal("connectingModal"); showStatus("❌ Gagal membuat koneksi."); alert("Gagal membuat offer: " + error.message); } }
+async function handleIncomingOffer(signal){ const requestId = signal.requestId; const remoteID = signal.from; showConnecting(remoteID); showStatus("📥 Menerima offer dari " + remoteID + "..."); try{ const pc = createPeer(remoteID); pendingConnections[requestId] = { remoteID:remoteID, role:"receiver", pc:pc, channel:null }; await pc.setRemoteDescription(new RTCSessionDescription(signal.offer)); showStatus("🔄 Membuat answer..."); const answer = await pc.createAnswer(); await pc.setLocalDescription(answer); await waitICE(pc); const local = pc.localDescription; const result = await gasPost({ action:"sendAnswer", requestId: requestId, from:myID, answer:{ type: local.type, sdp: local.sdp } }); if(!result.ok){ throw new Error(result.error || "Answer gagal dikirim."); } showStatus("📤 Answer dikirim ke " + remoteID + ". Menunggu P2P..."); }catch(error){ console.error(error); closeModal("connectingModal"); showStatus("❌ Gagal memproses offer."); alert("Gagal memproses offer: " + error.message); } }
+async function handleIncomingAnswer(signal){ const requestId = signal.requestId; const pending = pendingConnections[requestId]; if(!pending ||!pending.pc ){ console.warn("Peer untuk answer tidak ditemukan", requestId); return; } const remoteID = pending.remoteID; showStatus("📥 Answer diterima dari " + remoteID + "..."); try{ await pending.pc.setRemoteDescription(new RTCSessionDescription(signal.answer)); showStatus("🔄 Menunggu koneksi P2P..."); }catch(error){ console.error(error); closeModal("connectingModal"); showStatus("❌ Gagal menerapkan answer."); alert("Gagal menerapkan answer: " + error.message); } }
+function createPeer(remoteID){ if(connections[remoteID] && connections[remoteID].pc && connections[remoteID].pc.connectionState!== "closed"){ return connections[remoteID].pc; } const pc = new RTCPeerConnection({ iceServers:[{ urls: "stun:stun.l.google.com:19302" }] }); connections[remoteID] = { pc:pc, channel:null }; pc.onconnectionstatechange = () => { const state = pc.connectionState; console.log("WebRTC", remoteID, state); if(state === "connected"){ showStatus("🟢 Terhubung dengan " + remoteID); closeModal("connectingModal"); savePeer(remoteID); updatePeers(); renderOnlineUsers(onlineUsersCache); for(const requestId in pendingConnections){ const p = pendingConnections[requestId]; if(p.remoteID === remoteID){ gasPost({ action:"connected", requestId: requestId, from:myID }); break; } } } if(state === "failed" || state === "closed"){ delete connections[remoteID]; Object.keys(pendingConnections).forEach(requestId => { if(pendingConnections[requestId].remoteID === remoteID){ delete pendingConnections[requestId]; } }); updatePeers(); renderOnlineUsers(onlineUsersCache); } }; pc.ondatachannel = event => { setupChannel(remoteID, event.channel); }; pc.oniceconnectionstatechange = () => { console.log("ICE", remoteID, pc.iceConnectionState); }; return pc; }
+function setupChannel(remoteID, channel){ if(!connections[remoteID]){ connections[remoteID] = { pc:null, channel:null }; } connections[remoteID].channel = channel; channel.onopen = () => { console.log("DataChannel OPEN", remoteID); showStatus("🟢 P2P Chat terhubung dengan " + remoteID); closeModal("connectingModal"); savePeer(remoteID); updatePeers(); renderOnlineUsers(onlineUsersCache); }; channel.onclose = () => { console.log("DataChannel CLOSED", remoteID); updatePeers(); renderOnlineUsers(onlineUsersCache); }; channel.onerror = error => { console.error("DataChannel ERROR", error); }; channel.onmessage = event => { try{ const data = JSON.parse(event.data); if(data.type === "chat"){ showMessage(data.from, data.time, data.message, false); } }catch(error){ console.error("Pesan tidak valid", error); } }; }
+function updatePeers(){ const box = document.getElementById("peerList"); const ids = Object.keys(connections).filter(id => { const c = connections[id]; return (c.channel && c.channel.readyState === "open"); }); if(!ids.length){ box.innerHTML = "<div class='notice'>Belum ada peer yang terhubung.</div>"; return; } box.innerHTML = ""; ids.forEach(id => { const div = document.createElement("div"); div.className = "peer"; div.textContent = "🟢 " + id + " — TERHUBUNG"; box.appendChild(div); }); }
+function broadcast(){ const input = document.getElementById("message"); const message = input.value.trim(); if(!message){ return; } const data = { type:"chat", from:myID, time: new Date().toLocaleTimeString("id-ID",{ hour:"2-digit", minute:"2-digit" }), message:message }; let sent = false; Object.values(connections).forEach(connection => { if(connection.channel && connection.channel.readyState === "open"){ connection.channel.send(JSON.stringify(data)); sent = true; } }); if(!sent){ alert("Belum ada peer yang terhubung."); return; } showMessage(myID, data.time, message, true); saveChat(data); input.value = ""; }
+function showMessage(from, time, message, isMe){ const chat = document.getElementById("chat"); const div = document.createElement("div"); div.className = "msg" + (isMe? " me" : ""); const small = document.createElement("small"); small.textContent = from + " • " + time; const text = document.createElement("div"); text.textContent = message; div.appendChild(small); div.appendChild(text); chat.appendChild(div); chat.scrollTop = chat.scrollHeight; if(!isMe){ saveChat({ type:"chat", from:from, time:time, message:message }); } }
+function saveChat(data){ let chats = JSON.parse(localStorage.getItem(CHAT_KEY) || "[]"); chats.push(data); if(chats.length > 200){ chats = chats.slice(-200); } localStorage.setItem(CHAT_KEY, JSON.stringify(chats)); }
+function savePeer(id){ let peers = JSON.parse(localStorage.getItem(PEERS_KEY) || "[]"); if(!peers.includes(id)){ peers.push(id); localStorage.setItem(PEERS_KEY, JSON.stringify(peers)); } }
+function restoreChat(){ const chats = JSON.parse(localStorage.getItem(CHAT_KEY) || "[]"); chats.forEach(data => { showMessage(data.from, data.time, data.message, data.from === myID); }); }
+async function manualConnect(){ const session = document.getElementById("session").value.trim(); if(!session){ const tempID = "TMP_" + Date.now(); const pc = createPeer(tempID); const channel = pc.createDataChannel("chat"); setupChannel(tempID, channel); const offer = await pc.createOffer(); await pc.setLocalDescription(offer); await waitICE(pc); document.getElementById("session").value = JSON.stringify({ type:"offer", from:myID, sdp: pc.localDescription.sdp }); showStatus("Offer manual berhasil dibuat."); return; } let data; try{ data = JSON.parse(session); }catch(error){ alert("Format JSON tidak valid."); return; } if(data.type === "offer"){ const remoteID = data.from || "REMOTE"; const pc = createPeer(remoteID); try{ await pc.setRemoteDescription(new RTCSessionDescription({ type:"offer", sdp:data.sdp })); const answer = await pc.createAnswer(); await pc.setLocalDescription(answer); await waitICE(pc); document.getElementById("session").value = JSON.stringify({ type:"answer", from:myID, to:remoteID, sdp: pc.localDescription.sdp }); showStatus("Answer manual berhasil dibuat."); }catch(error){ alert("Gagal membuat answer: " + error.message); } return; } if(data.type === "answer"){ const remoteID = data.from || data.to; const connection = connections[remoteID]; if(!connection ||!connection.pc ){ alert("Peer untuk answer tidak ditemukan."); return; } try{ await connection.pc.setRemoteDescription(new RTCSessionDescription({ type:"answer", sdp:data.sdp })); showStatus("Answer berhasil diterapkan."); }catch(error){ alert("Gagal menerapkan answer: " + error.message); } } }
+function waitICE(pc){ return new Promise(resolve => { if(pc.iceGatheringState === "complete"){ resolve(); return; } let finished = false; const done = () => { if(finished){ return; } finished = true; pc.removeEventListener("icegatheringstatechange", check); resolve(); }; const check = () => { if(pc.iceGatheringState === "complete"){ done(); } }; pc.addEventListener("icegatheringstatechange", check); setTimeout(done, 10000); }); }
+async function deleteSignal(requestId){ if(!requestId){ return; } await gasPost({ action:"deleteSignal", requestId: requestId, from:myID }); }
+function showModal(id){ document.getElementById(id).classList.add("show"); }
+function closeModal(id){ document.getElementById(id).classList.remove("show"); }
+function showConnecting(remoteID){ document.getElementById("connectingInfo").textContent = "Menghubungkan dengan ID " + remoteID + "..."; showModal("connectingModal"); }
+async function copyID(){ try{ await navigator.clipboard.writeText(myID); showStatus("ID berhasil disalin."); }catch(error){ alert("Gagal menyalin ID."); } }
+async function copySession(){ const text = document.getElementById("session").value; try{ await navigator.clipboard.writeText(text); showStatus("Session berhasil disalin."); }catch(error){ alert("Gagal menyalin session."); } }
+async function pasteSession(){ try{ const text = await navigator.clipboard.readText(); document.getElementById("session").value = text; }catch(error){ alert("Tidak dapat membaca clipboard."); } }
+function clearSession(){ document.getElementById("session").value = ""; }
+function selectSession(){ document.getElementById("session").select(); }
+function handleEnter(event){ if(event.key === "Enter"){ event.preventDefault(); broadcast(); } }
+async function resetData(){ if(!confirm("Reset semua data dan membuat ID baru?")){ return; } await sendOffline(); Object.values(connections).forEach(connection => { try{ if(connection.channel){ connection.channel.close(); } if(connection.pc){ connection.pc.close(); } }catch(e){} }); connections = {}; pendingConnections = {}; knownSignals = {}; localStorage.removeItem(MY_ID_KEY); localStorage.removeItem(SESSION_KEY); localStorage.removeItem(PEERS_KEY); localStorage.removeItem(CHAT_KEY); myID = crypto.randomUUID().replace(/-/g,"").substring(0,6).toUpperCase(); localStorage.setItem(MY_ID_KEY, myID); document.getElementById("myID").textContent = myID; document.getElementById("chat").innerHTML = ""; document.getElementById("session").value = ""; updatePeers(); showStatus("ID baru: " + myID); await sendHeartbeat(); await loadOnlineUsers(); }
+async function sendOffline(){ if(!GAS_URL || GAS_URL.includes("MASUKKAN_URL")){ return; } try{ const data = JSON.stringify({ action:"offline", id:myID }); if(navigator.sendBeacon){ navigator.sendBeacon(GAS_URL, new Blob([data],{ type: "text/plain" })); }else{ await gasPost({ action:"offline", id:myID }); } }catch(error){ console.error(error); } }
+async function start(){ restoreChat(); updatePeers(); if(!GAS_URL || GAS_URL.includes("MASUKKAN_URL")){ showStatus("⚠️ URL GAS belum diatur."); return; } showStatus("🔄 Menghubungkan ke server..."); await sendHeartbeat(); await loadOnlineUsers(); await pollSignals(); setInterval(sendHeartbeat, HEARTBEAT_INTERVAL); setInterval(loadOnlineUsers, ONLINE_INTERVAL); setInterval(pollSignals, SIGNAL_INTERVAL); showStatus("🟢 Online sebagai " + myID); }
+window.addEventListener("beforeunload", () => { sendOffline(); });
+start();
+</script>
+</body>
+</html>
