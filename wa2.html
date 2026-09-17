@@ -1,0 +1,4216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width,initial-scale=1.0"
+>
+
+<title>P2P Chat</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+html,
+body{
+    margin:0;
+    padding:0;
+    height:100%;
+    font-family:Arial,sans-serif;
+    background:#efeae2;
+    color:#222;
+}
+
+body{
+    display:flex;
+    justify-content:center;
+}
+
+.app{
+    width:100%;
+    max-width:650px;
+    height:100vh;
+    background:#fff;
+    display:flex;
+    flex-direction:column;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.header{
+    background:#075e54;
+    color:white;
+    padding:12px 15px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+
+.header-left{
+    min-width:0;
+}
+
+.header-title{
+    font-size:19px;
+    font-weight:bold;
+}
+
+.header-id{
+    font-size:12px;
+    opacity:.85;
+    margin-top:3px;
+}
+
+.header-right{
+    display:flex;
+    gap:5px;
+}
+
+.icon-btn{
+    border:0;
+    background:transparent;
+    color:white;
+    font-size:20px;
+    padding:6px;
+    cursor:pointer;
+}
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.status{
+    padding:8px 12px;
+    font-size:12px;
+    background:#f5f5f5;
+    border-bottom:1px solid #ddd;
+    color:#555;
+}
+
+/* =========================================================
+   USER LIST
+========================================================= */
+
+.user-list{
+    flex:1;
+    overflow-y:auto;
+    background:#fff;
+}
+
+.user-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:13px 14px;
+    border-bottom:1px solid #eee;
+    cursor:pointer;
+}
+
+.user-row:active{
+    background:#f2f2f2;
+}
+
+.avatar{
+    width:46px;
+    height:46px;
+    border-radius:50%;
+    background:#128c7e;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+    flex-shrink:0;
+}
+
+.user-main{
+    flex:1;
+    min-width:0;
+}
+
+.user-id{
+    font-weight:bold;
+    font-size:15px;
+}
+
+.user-status{
+    margin-top:4px;
+    font-size:12px;
+    color:#777;
+}
+
+.online{
+    color:#16803c;
+}
+
+.connecting{
+    color:#b77900;
+}
+
+.connected{
+    color:#128c7e;
+}
+
+.empty{
+    padding:30px 15px;
+    text-align:center;
+    color:#888;
+    font-size:14px;
+}
+
+/* =========================================================
+   CHAT
+========================================================= */
+
+.chat{
+    display:none;
+    flex:1;
+    flex-direction:column;
+    min-height:0;
+}
+
+.chat-header{
+    background:#075e54;
+    color:white;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 12px;
+}
+
+.back-btn{
+    border:0;
+    background:transparent;
+    color:white;
+    font-size:25px;
+    cursor:pointer;
+}
+
+.chat-avatar{
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    background:#128c7e;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+}
+
+.chat-user{
+    flex:1;
+}
+
+.chat-user-id{
+    font-weight:bold;
+    font-size:15px;
+}
+
+.chat-user-status{
+    font-size:11px;
+    opacity:.85;
+    margin-top:2px;
+}
+
+.chat-box{
+    flex:1;
+    overflow-y:auto;
+    padding:12px;
+    background:#efeae2;
+}
+
+.message{
+    max-width:80%;
+    padding:7px 9px;
+    margin:4px 0;
+    border-radius:8px;
+    font-size:14px;
+    line-height:1.4;
+    word-break:break-word;
+    box-shadow:0 1px 1px rgba(0,0,0,.08);
+}
+
+.message.me{
+    background:#d9fdd3;
+    margin-left:auto;
+    border-top-right-radius:2px;
+}
+
+.message.other{
+    background:white;
+    margin-right:auto;
+    border-top-left-radius:2px;
+}
+
+.message-text{
+    white-space:pre-wrap;
+}
+
+.message-info{
+    text-align:right;
+    margin-top:2px;
+    font-size:10px;
+    color:#777;
+}
+
+.message-check{
+    font-size:13px;
+    margin-left:3px;
+}
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+.chat-input-area{
+    display:flex;
+    gap:7px;
+    padding:8px;
+    background:#f0f0f0;
+}
+
+.chat-input{
+    flex:1;
+    min-width:0;
+    border:0;
+    outline:0;
+    background:white;
+    border-radius:20px;
+    padding:11px 15px;
+    font-size:16px;
+}
+
+.send-btn{
+    width:45px;
+    height:45px;
+    border:0;
+    border-radius:50%;
+    background:#128c7e;
+    color:white;
+    font-size:18px;
+    cursor:pointer;
+}
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+
+.settings{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:15px;
+    z-index:100;
+}
+
+.settings-box{
+    width:100%;
+    max-width:400px;
+    background:white;
+    border-radius:12px;
+    padding:18px;
+}
+
+.settings-title{
+    font-size:18px;
+    font-weight:bold;
+    margin-bottom:15px;
+}
+
+.my-id-box{
+    background:#f5f5f5;
+    border-radius:8px;
+    padding:15px;
+    text-align:center;
+    font-size:25px;
+    font-weight:bold;
+    letter-spacing:3px;
+    margin-bottom:12px;
+}
+
+.setting-btn{
+    width:100%;
+    border:0;
+    border-radius:8px;
+    padding:12px;
+    margin-top:7px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.copy-btn{
+    background:#1976d2;
+    color:white;
+}
+
+.reset-btn{
+    background:#c62828;
+    color:white;
+}
+
+.close-btn{
+    background:#eee;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="header">
+
+        <div class="header-left">
+
+            <div class="header-title">
+                💬 P2P Chat
+            </div>
+
+            <div class="header-id">
+                ID: <span id="myID">------</span>
+            </div>
+
+        </div>
+
+        <div class="header-right">
+
+            <button
+                class="icon-btn"
+                onclick="openSettings()"
+            >
+                ⋮
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         STATUS
+    ====================================================== -->
+
+    <div
+        class="status"
+        id="status"
+    >
+        Memulai...
+    </div>
+
+
+    <!-- =====================================================
+         USER LIST
+    ====================================================== -->
+
+    <div
+        class="user-list"
+        id="userList"
+    >
+
+        <div class="empty">
+            Mencari pengguna online...
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         CHAT
+    ====================================================== -->
+
+    <div
+        class="chat"
+        id="chat"
+    >
+
+        <div class="chat-header">
+
+            <button
+                class="back-btn"
+                onclick="closeChat()"
+            >
+                ‹
+            </button>
+
+            <div
+                class="chat-avatar"
+                id="chatAvatar"
+            >
+                ?
+            </div>
+
+            <div class="chat-user">
+
+                <div
+                    class="chat-user-id"
+                    id="chatUserID"
+                >
+                    ------
+                </div>
+
+                <div
+                    class="chat-user-status"
+                    id="chatUserStatus"
+                >
+                    Menghubungkan...
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div
+            class="chat-box"
+            id="chatBox"
+        >
+        </div>
+
+
+        <div class="chat-input-area">
+
+            <input
+                type="text"
+                id="chatInput"
+                class="chat-input"
+                placeholder="Tulis pesan..."
+                autocomplete="off"
+            >
+
+            <button
+                class="send-btn"
+                onclick="sendChat()"
+            >
+                ➤
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     SETTINGS
+========================================================== -->
+
+<div
+    class="settings"
+    id="settings"
+    onclick="closeSettings(event)"
+>
+
+    <div
+        class="settings-box"
+        onclick="event.stopPropagation()"
+    >
+
+        <div class="settings-title">
+            ⚙️ Pengaturan
+        </div>
+
+        <div
+            class="my-id-box"
+            id="settingsID"
+        >
+            ------
+        </div>
+
+        <button
+            class="setting-btn copy-btn"
+            onclick="copyID()"
+        >
+            📋 SALIN ID
+        </button>
+
+        <button
+            class="setting-btn reset-btn"
+            onclick="resetData()"
+        >
+            ♻️ RESET DATA
+        </button>
+
+        <button
+            class="setting-btn close-btn"
+            onclick="closeSettings()"
+        >
+            TUTUP
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   KONFIGURASI GAS
+========================================================= */
+
+const GAS_URL =
+"https://script.google.com/macros/s/AKfycbx503tuFMON6njMTIJZogTuQGZYIjIoJZIfmn1Q1slBUAmJGA3VczzZosSAv2GYxtkO-Q/exec";
+
+
+/* =========================================================
+   STORAGE
+========================================================= */
+
+const MY_ID_KEY =
+"webrtc_p2p_myID";
+
+const PEERS_KEY =
+"webrtc_p2p_peers";
+
+const CHAT_KEY =
+"webrtc_p2p_chat";
+
+
+/*
+    Otomatis selalu aktif.
+*/
+const AUTO_ACCEPT = true;
+const AUTO_CONNECT = true;
+
+
+/* =========================================================
+   INTERVAL
+========================================================= */
+
+const HEARTBEAT_INTERVAL = 5000;
+
+const ONLINE_INTERVAL = 5000;
+
+const SIGNAL_INTERVAL = 2500;
+
+const AUTO_REQUEST_COOLDOWN = 30000;
+
+const RETRY_BASE = 10000;
+
+
+/* =========================================================
+   ID
+========================================================= */
+
+let myID =
+localStorage.getItem(
+    MY_ID_KEY
+);
+
+
+if(!myID){
+
+    myID =
+        crypto.randomUUID()
+            .replace(/-/g,"")
+            .substring(0,6)
+            .toUpperCase();
+
+    localStorage.setItem(
+        MY_ID_KEY,
+        myID
+    );
+}
+
+
+document.getElementById(
+    "myID"
+).textContent = myID;
+
+document.getElementById(
+    "settingsID"
+).textContent = myID;
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+let connections = {};
+
+let pendingConnections = {};
+
+let knownSignals = {};
+
+let incomingRequests = {};
+
+let processingSignals = {};
+
+let pairStates = {};
+
+let onlineUsersCache = [];
+
+let autoRequestTimes = {};
+
+let retryCounts = {};
+
+let retryTimers = {};
+
+let heartbeatLogged = false;
+
+
+/*
+    User yang sedang dibuka.
+*/
+let activeChatUser = null;
+
+
+/* =========================================================
+   PAIR KEY
+========================================================= */
+
+function getPairKey(
+    a,
+    b
+){
+
+    return [a,b]
+        .sort()
+        .join(":");
+}
+
+
+/* =========================================================
+   ROLE
+========================================================= */
+
+function getPairRole(
+    remoteID
+){
+
+    if(myID < remoteID){
+
+        return "initiator";
+
+    }
+
+    return "receiver";
+}
+
+
+/* =========================================================
+   PAIR STATE
+========================================================= */
+
+function getPairState(
+    remoteID
+){
+
+    const key =
+        getPairKey(
+            myID,
+            remoteID
+        );
+
+
+    if(!pairStates[key]){
+
+        pairStates[key] = {
+
+            initiator:
+                getPairRole(remoteID) ===
+                "initiator"
+                    ? myID
+                    : remoteID,
+
+            receiver:
+                getPairRole(remoteID) ===
+                "initiator"
+                    ? remoteID
+                    : myID,
+
+            state:"none",
+
+            requestId:null,
+
+            updated:Date.now(),
+
+            retry:0
+        };
+    }
+
+
+    return pairStates[key];
+}
+
+
+/* =========================================================
+   SAVE PAIR STATE
+========================================================= */
+
+function savePairState(
+    remoteID,
+    state,
+    requestId
+){
+
+    const key =
+        getPairKey(
+            myID,
+            remoteID
+        );
+
+
+    const pair =
+        getPairState(
+            remoteID
+        );
+
+
+    pair.state =
+        state;
+
+    pair.updated =
+        Date.now();
+
+
+    if(
+        requestId !== undefined
+    ){
+
+        pair.requestId =
+            requestId;
+    }
+
+
+    pairStates[key] =
+        pair;
+}
+
+
+/* =========================================================
+   CONNECTED
+========================================================= */
+
+function isConnected(
+    remoteID
+){
+
+    const item =
+        connections[
+            remoteID
+        ];
+
+
+    if(
+        !item ||
+        !item.pc
+    ){
+
+        return false;
+    }
+
+
+    return (
+        item.pc.connectionState ===
+        "connected"
+    );
+}
+
+
+/* =========================================================
+   NEGOTIATING
+========================================================= */
+
+function isNegotiating(
+    remoteID
+){
+
+    const pair =
+        getPairState(
+            remoteID
+        );
+
+
+    if(
+        pair.state === "requesting" ||
+        pair.state === "requested" ||
+        pair.state === "accepted" ||
+        pair.state === "offering" ||
+        pair.state === "answering"
+    ){
+
+        return true;
+    }
+
+
+    return Object.values(
+        pendingConnections
+    ).some(
+        p =>
+            p &&
+            p.remoteID === remoteID
+    );
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function showStatus(
+    text
+){
+
+    document.getElementById(
+        "status"
+    ).textContent =
+        text;
+}
+
+
+/* =========================================================
+   GAS POST
+========================================================= */
+
+async function gasPost(
+    data
+){
+
+    try{
+
+        const response =
+            await fetch(
+                GAS_URL,
+                {
+                    method:"POST",
+
+                    headers:{
+                        "Content-Type":
+                        "text/plain;charset=utf-8"
+                    },
+
+                    body:
+                        JSON.stringify(data)
+                }
+            );
+
+
+        return await response.json();
+
+    }catch(error){
+
+        console.error(
+            "GAS POST:",
+            error
+        );
+
+
+        return {
+            ok:false,
+            error:error.message
+        };
+    }
+}
+
+
+/* =========================================================
+   GAS GET
+========================================================= */
+
+async function gasGet(
+    params
+){
+
+    try{
+
+        const query =
+            new URLSearchParams(
+                params
+            );
+
+
+        const response =
+            await fetch(
+                GAS_URL +
+                "?" +
+                query.toString()
+            );
+
+
+        return await response.json();
+
+    }catch(error){
+
+        console.error(
+            "GAS GET:",
+            error
+        );
+
+
+        return {
+            ok:false,
+            error:error.message
+        };
+    }
+}
+
+
+/* =========================================================
+   HEARTBEAT
+========================================================= */
+
+async function sendHeartbeat(){
+
+    const result =
+        await gasPost({
+
+            action:"heartbeat",
+
+            id:myID
+        });
+
+
+    if(
+        result &&
+        result.ok
+    ){
+
+        if(!heartbeatLogged){
+
+            heartbeatLogged =
+                true;
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   EXTRACT USER ID
+========================================================= */
+
+function extractUserID(
+    user
+){
+
+    if(
+        typeof user === "string"
+    ){
+
+        return user;
+    }
+
+
+    if(
+        user &&
+        user.id
+    ){
+
+        return user.id;
+    }
+
+
+    if(
+        user &&
+        user.userId
+    ){
+
+        return user.userId;
+    }
+
+
+    if(
+        user &&
+        user.ID
+    ){
+
+        return user.ID;
+    }
+
+
+    return null;
+}
+
+
+/* =========================================================
+   LOAD ONLINE USERS
+========================================================= */
+
+async function loadOnlineUsers(){
+
+    try{
+
+        const result =
+            await gasGet({
+
+                action:"online"
+            });
+
+
+        if(
+            !result ||
+            !result.ok
+        ){
+
+            return;
+        }
+
+
+        onlineUsersCache =
+            Array.isArray(
+                result.users
+            )
+                ? result.users
+                : [];
+
+
+        renderOnlineUsers();
+
+
+        if(AUTO_CONNECT){
+
+            await autoConnectMissingUsers();
+
+        }
+
+    }catch(error){
+
+        console.error(
+            error
+        );
+    }
+}
+
+
+/* =========================================================
+   RENDER ONLINE USERS
+========================================================= */
+
+function renderOnlineUsers(){
+
+    const list =
+        document.getElementById(
+            "userList"
+        );
+
+
+    /*
+        Jangan render daftar user
+        ketika sedang membuka chat.
+    */
+
+    if(activeChatUser){
+
+        updateChatHeader();
+
+        return;
+    }
+
+
+    list.innerHTML = "";
+
+
+    let count = 0;
+
+
+    for(
+        const user of onlineUsersCache
+    ){
+
+        const remoteID =
+            extractUserID(
+                user
+            );
+
+
+        if(!remoteID){
+
+            continue;
+        }
+
+
+        if(
+            remoteID === myID
+        ){
+
+            continue;
+        }
+
+
+        count++;
+
+
+        const row =
+            document.createElement(
+                "div"
+            );
+
+
+        row.className =
+            "user-row";
+
+
+        row.onclick =
+            function(){
+
+                openChat(
+                    remoteID
+                );
+
+            };
+
+
+        const avatar =
+            document.createElement(
+                "div"
+            );
+
+
+        avatar.className =
+            "avatar";
+
+
+        avatar.textContent =
+            remoteID.substring(
+                0,
+                1
+            );
+
+
+        const main =
+            document.createElement(
+                "div"
+            );
+
+
+        main.className =
+            "user-main";
+
+
+        const id =
+            document.createElement(
+                "div"
+            );
+
+
+        id.className =
+            "user-id";
+
+
+        id.textContent =
+            remoteID;
+
+
+        const status =
+            document.createElement(
+                "div"
+            );
+
+
+        status.className =
+            "user-status";
+
+
+        if(
+            isConnected(
+                remoteID
+            )
+        ){
+
+            status.className =
+                "user-status connected";
+
+            status.textContent =
+                "✓✓ Terhubung";
+
+        }else if(
+            isNegotiating(
+                remoteID
+            )
+        ){
+
+            status.className =
+                "user-status connecting";
+
+            status.textContent =
+                "⟳ Menghubungkan...";
+
+        }else{
+
+            status.className =
+                "user-status online";
+
+            status.textContent =
+                "● Online";
+
+        }
+
+
+        main.appendChild(
+            id
+        );
+
+        main.appendChild(
+            status
+        );
+
+
+        row.appendChild(
+            avatar
+        );
+
+        row.appendChild(
+            main
+        );
+
+
+        list.appendChild(
+            row
+        );
+
+    }
+
+
+    if(count === 0){
+
+        list.innerHTML =
+            `
+            <div class="empty">
+                Belum ada pengguna lain yang online.
+            </div>
+            `;
+
+    }
+
+
+    updateMainStatus();
+
+}
+
+
+/* =========================================================
+   MAIN STATUS
+========================================================= */
+
+function updateMainStatus(){
+
+    const connected =
+        Object.keys(
+            connections
+        ).filter(
+            id =>
+                isConnected(id)
+        ).length;
+
+
+    if(connected > 0){
+
+        showStatus(
+            "🟢 Online • " +
+            connected +
+            " koneksi P2P aktif"
+        );
+
+    }else{
+
+        showStatus(
+            "🟢 Online • mencari pengguna..."
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   AUTO CONNECT
+========================================================= */
+
+async function autoConnectMissingUsers(){
+
+    if(!AUTO_CONNECT){
+
+        return;
+    }
+
+
+    for(
+        const user of onlineUsersCache
+    ){
+
+        const remoteID =
+            extractUserID(
+                user
+            );
+
+
+        if(!remoteID){
+
+            continue;
+        }
+
+
+        if(
+            remoteID === myID
+        ){
+
+            continue;
+        }
+
+
+        if(
+            isConnected(
+                remoteID
+            )
+        ){
+
+            continue;
+        }
+
+
+        /*
+            Hanya ID kecil yang
+            menjadi initiator otomatis.
+        */
+
+        if(
+            getPairRole(
+                remoteID
+            ) !==
+            "initiator"
+        ){
+
+            continue;
+        }
+
+
+        if(
+            isNegotiating(
+                remoteID
+            )
+        ){
+
+            continue;
+        }
+
+
+        const incoming =
+            Object.values(
+                incomingRequests
+            ).some(
+                request =>
+                    request &&
+                    request.from ===
+                    remoteID
+            );
+
+
+        if(incoming){
+
+            continue;
+        }
+
+
+        const last =
+            autoRequestTimes[
+                remoteID
+            ] || 0;
+
+
+        if(
+            Date.now() -
+            last <
+            AUTO_REQUEST_COOLDOWN
+        ){
+
+            continue;
+        }
+
+
+        if(
+            retryTimers[
+                remoteID
+            ]
+        ){
+
+            continue;
+        }
+
+
+        autoRequestTimes[
+            remoteID
+        ] =
+            Date.now();
+
+
+        await requestConnection(
+            remoteID,
+            true
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   REQUEST CONNECTION
+========================================================= */
+
+async function requestConnection(
+    remoteID,
+    automatic = false
+){
+
+    if(!remoteID){
+
+        return;
+    }
+
+
+    if(
+        remoteID === myID
+    ){
+
+        return;
+    }
+
+
+    if(
+        isConnected(
+            remoteID
+        )
+    ){
+
+        return;
+    }
+
+
+    if(
+        automatic &&
+        getPairRole(
+            remoteID
+        ) !==
+        "initiator"
+    ){
+
+        return;
+    }
+
+
+    if(
+        isNegotiating(
+            remoteID
+        )
+    ){
+
+        return;
+    }
+
+
+    savePairState(
+        remoteID,
+        "requesting",
+        null
+    );
+
+
+    const result =
+        await gasPost({
+
+            action:"request",
+
+            from:myID,
+
+            to:remoteID
+        });
+
+
+    if(
+        !result ||
+        !result.ok
+    ){
+
+        savePairState(
+            remoteID,
+            "failed",
+            null
+        );
+
+
+        scheduleRetry(
+            remoteID
+        );
+
+
+        renderOnlineUsers();
+
+        return;
+    }
+
+
+    const requestId =
+        result.requestId ||
+        result.id;
+
+
+    if(!requestId){
+
+        savePairState(
+            remoteID,
+            "failed",
+            null
+        );
+
+
+        scheduleRetry(
+            remoteID
+        );
+
+
+        return;
+    }
+
+
+    pendingConnections[
+        requestId
+    ] = {
+
+        remoteID:
+
+            remoteID,
+
+        role:
+
+            "initiator",
+
+        pc:
+            null,
+
+        channel:
+            null,
+
+        connectedNotified:
+            false,
+
+        automatic:
+            automatic
+    };
+
+
+    savePairState(
+        remoteID,
+        "requesting",
+        requestId
+    );
+
+
+    renderOnlineUsers();
+
+}
+
+
+/* =========================================================
+   RETRY
+========================================================= */
+
+function scheduleRetry(
+    remoteID
+){
+
+    if(
+        retryTimers[
+            remoteID
+        ]
+    ){
+
+        return;
+    }
+
+
+    let count =
+        retryCounts[
+            remoteID
+        ] || 0;
+
+
+    count++;
+
+
+    retryCounts[
+        remoteID
+    ] =
+        count;
+
+
+    const delay =
+        Math.min(
+            RETRY_BASE *
+            Math.pow(
+                2,
+                count - 1
+            ),
+            60000
+        );
+
+
+    retryTimers[
+        remoteID
+    ] =
+        setTimeout(
+            async function(){
+
+                delete retryTimers[
+                    remoteID
+                ];
+
+
+                if(
+                    isConnected(
+                        remoteID
+                    )
+                ){
+
+                    return;
+                }
+
+
+                if(
+                    getPairRole(
+                        remoteID
+                    ) !==
+                    "initiator"
+                ){
+
+                    return;
+                }
+
+
+                if(AUTO_CONNECT){
+
+                    await requestConnection(
+                        remoteID,
+                        true
+                    );
+
+                }
+
+            },
+            delay
+        );
+
+}
+
+
+/* =========================================================
+   POLL SIGNAL
+========================================================= */
+
+async function pollSignals(){
+
+    try{
+
+        const result =
+            await gasGet({
+
+                action:"signals",
+
+                id:myID
+            });
+
+
+        if(
+            !result ||
+            !result.ok
+        ){
+
+            return;
+        }
+
+
+        const signals =
+            Array.isArray(
+                result.signals
+            )
+                ? result.signals
+                : [];
+
+
+        for(
+            const signal of signals
+        ){
+
+            if(
+                !signal.requestId
+            ){
+
+                continue;
+            }
+
+
+            const requestId =
+                signal.requestId;
+
+
+            if(
+                processingSignals[
+                    requestId
+                ]
+            ){
+
+                continue;
+            }
+
+
+            const previous =
+                knownSignals[
+                    requestId
+                ];
+
+
+            if(
+                previous ===
+                signal.status
+            ){
+
+                continue;
+            }
+
+
+            knownSignals[
+                requestId
+            ] =
+                signal.status;
+
+
+            processingSignals[
+                requestId
+            ] =
+                true;
+
+
+            try{
+
+                await processSignal(
+                    signal,
+                    previous
+                );
+
+            }catch(error){
+
+                console.error(
+                    "Signal error:",
+                    error
+                );
+
+            }finally{
+
+                delete processingSignals[
+                    requestId
+                ];
+
+            }
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Poll error:",
+            error
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   PROCESS SIGNAL
+========================================================= */
+
+async function processSignal(
+    signal,
+    previous
+){
+
+    const requestId =
+        signal.requestId;
+
+    const status =
+        signal.status;
+
+
+    /* =====================================================
+       REQUEST
+    ===================================================== */
+
+    if(
+        status === "request"
+    ){
+
+        if(
+            signal.from === myID
+        ){
+
+            return;
+        }
+
+
+        const remoteID =
+            signal.from;
+
+
+        const pair =
+            getPairState(
+                remoteID
+            );
+
+
+        /*
+            Collision protection.
+        */
+
+        if(
+            pair.initiator === myID
+        ){
+
+            return;
+        }
+
+
+        if(
+            isConnected(
+                remoteID
+            )
+        ){
+
+            return;
+        }
+
+
+        if(
+            isNegotiating(
+                remoteID
+            )
+        ){
+
+            return;
+        }
+
+
+        incomingRequests[
+            requestId
+        ] =
+            signal;
+
+
+        savePairState(
+            remoteID,
+            "requested",
+            requestId
+        );
+
+
+        /*
+            AUTO ACCEPT SELALU AKTIF.
+        */
+
+        if(AUTO_ACCEPT){
+
+            await acceptRequest(
+                requestId
+            );
+
+        }
+
+
+        return;
+    }
+
+
+    /* =====================================================
+       ACCEPTED
+    ===================================================== */
+
+    if(
+        status === "accepted"
+    ){
+
+        const pending =
+            pendingConnections[
+                requestId
+            ];
+
+
+        if(!pending){
+
+            return;
+        }
+
+
+        if(
+            pending.role !==
+            "initiator"
+        ){
+
+            return;
+        }
+
+
+        const remoteID =
+            pending.remoteID;
+
+
+        savePairState(
+            remoteID,
+            "accepted",
+            requestId
+        );
+
+
+        await createOffer(
+            requestId,
+            remoteID
+        );
+
+
+        return;
+    }
+
+
+    /* =====================================================
+       OFFER
+    ===================================================== */
+
+    if(
+        status === "offer"
+    ){
+
+        const remoteID =
+            signal.from;
+
+
+        if(
+            getPairRole(
+                remoteID
+            ) !==
+            "receiver"
+        ){
+
+            return;
+        }
+
+
+        let pending =
+            pendingConnections[
+                requestId
+            ];
+
+
+        if(!pending){
+
+            pending = {
+
+                remoteID:
+                    remoteID,
+
+                role:
+                    "receiver",
+
+                pc:
+                    null,
+
+                channel:
+                    null,
+
+                connectedNotified:
+                    false
+            };
+
+
+            pendingConnections[
+                requestId
+            ] =
+                pending;
+        }
+
+
+        if(
+            pending.role !==
+            "receiver"
+        ){
+
+            return;
+        }
+
+
+        if(!signal.offer){
+
+            return;
+        }
+
+
+        savePairState(
+            remoteID,
+            "answering",
+            requestId
+        );
+
+
+        await createAnswer(
+            requestId,
+            remoteID,
+            signal.offer
+        );
+
+
+        return;
+    }
+
+
+    /* =====================================================
+       ANSWER
+    ===================================================== */
+
+    if(
+        status === "answer"
+    ){
+
+        const pending =
+            pendingConnections[
+                requestId
+            ];
+
+
+        if(!pending){
+
+            return;
+        }
+
+
+        if(
+            pending.role !==
+            "initiator"
+        ){
+
+            return;
+        }
+
+
+        if(!signal.answer){
+
+            return;
+        }
+
+
+        const remoteID =
+            pending.remoteID;
+
+
+        const pc =
+            pending.pc;
+
+
+        if(!pc){
+
+            return;
+        }
+
+
+        try{
+
+            await pc.setRemoteDescription(
+                new RTCSessionDescription(
+                    signal.answer
+                )
+            );
+
+
+            savePairState(
+                remoteID,
+                "answering",
+                requestId
+            );
+
+        }catch(error){
+
+            console.error(
+                error
+            );
+
+        }
+
+
+        return;
+    }
+
+
+    /* =====================================================
+       CONNECTED
+    ===================================================== */
+
+    if(
+        status === "connected"
+    ){
+
+        if(
+            signal.from &&
+            isConnected(
+                signal.from
+            )
+        ){
+
+            savePairState(
+                signal.from,
+                "connected",
+                requestId
+            );
+
+        }
+
+
+        renderOnlineUsers();
+
+        updateChatHeader();
+
+        return;
+    }
+
+
+    /* =====================================================
+       REJECTED
+    ===================================================== */
+
+    if(
+        status === "rejected"
+    ){
+
+        const pending =
+            pendingConnections[
+                requestId
+            ];
+
+
+        if(pending){
+
+            const remoteID =
+                pending.remoteID;
+
+
+            delete pendingConnections[
+                requestId
+            ];
+
+
+            savePairState(
+                remoteID,
+                "failed",
+                null
+            );
+
+
+            scheduleRetry(
+                remoteID
+            );
+
+        }
+
+
+        delete incomingRequests[
+            requestId
+        ];
+
+
+        return;
+    }
+
+}
+
+
+/* =========================================================
+   ACCEPT REQUEST
+========================================================= */
+
+async function acceptRequest(
+    requestId
+){
+
+    const signal =
+        incomingRequests[
+            requestId
+        ];
+
+
+    if(!signal){
+
+        return;
+    }
+
+
+    const remoteID =
+        signal.from;
+
+
+    if(
+        getPairRole(
+            remoteID
+        ) !==
+        "receiver"
+    ){
+
+        delete incomingRequests[
+            requestId
+        ];
+
+        return;
+    }
+
+
+    delete incomingRequests[
+        requestId
+    ];
+
+
+    pendingConnections[
+        requestId
+    ] = {
+
+        remoteID:
+            remoteID,
+
+        role:
+            "receiver",
+
+        pc:
+            null,
+
+        channel:
+            null,
+
+        connectedNotified:
+            false
+    };
+
+
+    savePairState(
+        remoteID,
+        "accepted",
+        requestId
+    );
+
+
+    const result =
+        await gasPost({
+
+            action:"accept",
+
+            requestId:
+                requestId,
+
+            to:myID
+        });
+
+
+    if(
+        !result ||
+        !result.ok
+    ){
+
+        delete pendingConnections[
+            requestId
+        ];
+
+
+        savePairState(
+            remoteID,
+            "failed",
+            null
+        );
+
+
+        return;
+    }
+
+
+    renderOnlineUsers();
+
+}
+
+
+/* =========================================================
+   CREATE PEER
+========================================================= */
+
+function createPeer(
+    remoteID,
+    requestId
+){
+
+    if(
+        connections[remoteID] &&
+        connections[remoteID].pc &&
+        connections[remoteID].pc.connectionState !==
+        "closed" &&
+        connections[remoteID].pc.connectionState !==
+        "failed"
+    ){
+
+        return connections[
+            remoteID
+        ].pc;
+
+    }
+
+
+    const pc =
+        new RTCPeerConnection({
+
+            iceServers:[
+                {
+                    urls:
+                    "stun:stun.l.google.com:19302"
+                }
+            ]
+
+        });
+
+
+    connections[
+        remoteID
+    ] = {
+
+        pc:
+            pc,
+
+        channel:
+            null,
+
+        requestId:
+            requestId
+    };
+
+
+    if(
+        requestId &&
+        pendingConnections[
+            requestId
+        ]
+    ){
+
+        pendingConnections[
+            requestId
+        ].pc =
+            pc;
+
+    }
+
+
+    /* =====================================================
+       CONNECTION STATE
+    ===================================================== */
+
+    pc.onconnectionstatechange =
+        async function(){
+
+        if(
+            pc.connectionState ===
+            "connected"
+        ){
+
+            savePairState(
+                remoteID,
+                "connected",
+                requestId
+            );
+
+
+            retryCounts[
+                remoteID
+            ] = 0;
+
+
+            if(
+                retryTimers[
+                    remoteID
+                ]
+            ){
+
+                clearTimeout(
+                    retryTimers[
+                        remoteID
+                    ]
+                );
+
+
+                delete retryTimers[
+                    remoteID
+                ];
+
+            }
+
+
+            savePeers();
+
+
+            const pending =
+                requestId
+                    ? pendingConnections[
+                        requestId
+                      ]
+                    : null;
+
+
+            if(
+                pending &&
+                !pending.connectedNotified
+            ){
+
+                pending.connectedNotified =
+                    true;
+
+
+                await gasPost({
+
+                    action:"connected",
+
+                    requestId:
+                        requestId,
+
+                    from:
+                        myID
+                });
+
+
+                delete pendingConnections[
+                    requestId
+                ];
+
+            }
+
+
+            renderOnlineUsers();
+
+            updateChatHeader();
+
+            updateMainStatus();
+
+
+            return;
+        }
+
+
+        if(
+            pc.connectionState ===
+            "failed"
+        ){
+
+            savePairState(
+                remoteID,
+                "failed",
+                requestId
+            );
+
+
+            cleanupConnection(
+                remoteID
+            );
+
+
+            if(
+                AUTO_CONNECT &&
+                getPairRole(
+                    remoteID
+                ) ===
+                "initiator"
+            ){
+
+                scheduleRetry(
+                    remoteID
+                );
+
+            }
+
+
+            return;
+        }
+
+
+        if(
+            pc.connectionState ===
+            "closed"
+        ){
+
+            cleanupConnection(
+                remoteID
+            );
+
+        }
+
+    };
+
+
+    /* =====================================================
+       DATA CHANNEL
+    ===================================================== */
+
+    pc.ondatachannel =
+        function(event){
+
+        setupChannel(
+            remoteID,
+            event.channel,
+            requestId
+        );
+
+    };
+
+
+    return pc;
+
+}
+
+
+/* =========================================================
+   SETUP CHANNEL
+========================================================= */
+
+function setupChannel(
+    remoteID,
+    channel,
+    requestId
+){
+
+    if(
+        !connections[
+            remoteID
+        ]
+    ){
+
+        return;
+    }
+
+
+    connections[
+        remoteID
+    ].channel =
+        channel;
+
+
+    if(
+        requestId &&
+        pendingConnections[
+            requestId
+        ]
+    ){
+
+        pendingConnections[
+            requestId
+        ].channel =
+            channel;
+
+    }
+
+
+    channel.onopen =
+        function(){
+
+        savePairState(
+            remoteID,
+            "connected",
+            requestId
+        );
+
+
+        renderOnlineUsers();
+
+        updateChatHeader();
+
+        updateMainStatus();
+
+    };
+
+
+    channel.onclose =
+        function(){
+
+        renderOnlineUsers();
+
+        updateChatHeader();
+
+        updateMainStatus();
+
+    };
+
+
+    channel.onerror =
+        function(error){
+
+        console.error(
+            "DataChannel:",
+            error
+        );
+
+    };
+
+
+    channel.onmessage =
+        function(event){
+
+        receiveChat(
+            remoteID,
+            event.data
+        );
+
+    };
+
+}
+
+
+/* =========================================================
+   CREATE OFFER
+========================================================= */
+
+async function createOffer(
+    requestId,
+    remoteID
+){
+
+    try{
+
+        if(
+            getPairRole(
+                remoteID
+            ) !==
+            "initiator"
+        ){
+
+            return;
+        }
+
+
+        savePairState(
+            remoteID,
+            "offering",
+            requestId
+        );
+
+
+        const pc =
+            createPeer(
+                remoteID,
+                requestId
+            );
+
+
+        if(
+            !connections[
+                remoteID
+            ].channel
+        ){
+
+            const channel =
+                pc.createDataChannel(
+                    "chat"
+                );
+
+
+            setupChannel(
+                remoteID,
+                channel,
+                requestId
+            );
+
+        }
+
+
+        const offer =
+            await pc.createOffer();
+
+
+        await pc.setLocalDescription(
+            offer
+        );
+
+
+        await waitICE(
+            pc
+        );
+
+
+        const local =
+            pc.localDescription;
+
+
+        const result =
+            await gasPost({
+
+                action:"sendOffer",
+
+                requestId:
+                    requestId,
+
+                from:
+                    myID,
+
+                offer:{
+
+                    type:
+                        local.type,
+
+                    sdp:
+                        local.sdp
+
+                }
+
+            });
+
+
+        if(
+            !result ||
+            !result.ok
+        ){
+
+            savePairState(
+                remoteID,
+                "failed",
+                requestId
+            );
+
+
+            scheduleRetry(
+                remoteID
+            );
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Offer:",
+            error
+        );
+
+
+        savePairState(
+            remoteID,
+            "failed",
+            requestId
+        );
+
+
+        scheduleRetry(
+            remoteID
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   CREATE ANSWER
+========================================================= */
+
+async function createAnswer(
+    requestId,
+    remoteID,
+    offer
+){
+
+    try{
+
+        if(
+            getPairRole(
+                remoteID
+            ) !==
+            "receiver"
+        ){
+
+            return;
+        }
+
+
+        savePairState(
+            remoteID,
+            "answering",
+            requestId
+        );
+
+
+        const pc =
+            createPeer(
+                remoteID,
+                requestId
+            );
+
+
+        await pc.setRemoteDescription(
+            new RTCSessionDescription(
+                offer
+            )
+        );
+
+
+        const answer =
+            await pc.createAnswer();
+
+
+        await pc.setLocalDescription(
+            answer
+        );
+
+
+        await waitICE(
+            pc
+        );
+
+
+        const local =
+            pc.localDescription;
+
+
+        const result =
+            await gasPost({
+
+                action:"sendAnswer",
+
+                requestId:
+                    requestId,
+
+                from:
+                    myID,
+
+                answer:{
+
+                    type:
+                        local.type,
+
+                    sdp:
+                        local.sdp
+
+                }
+
+            });
+
+
+        if(
+            !result ||
+            !result.ok
+        ){
+
+            savePairState(
+                remoteID,
+                "failed",
+                requestId
+            );
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Answer:",
+            error
+        );
+
+
+        savePairState(
+            remoteID,
+            "failed",
+            requestId
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   WAIT ICE
+========================================================= */
+
+function waitICE(
+    pc
+){
+
+    return new Promise(
+        resolve => {
+
+            if(
+                pc.iceGatheringState ===
+                "complete"
+            ){
+
+                resolve();
+
+                return;
+            }
+
+
+            let done = false;
+
+
+            function finish(){
+
+                if(done){
+
+                    return;
+                }
+
+
+                done = true;
+
+                resolve();
+
+            }
+
+
+            pc.addEventListener(
+                "icegatheringstatechange",
+                function(){
+
+                    if(
+                        pc.iceGatheringState ===
+                        "complete"
+                    ){
+
+                        finish();
+
+                    }
+
+                }
+            );
+
+
+            setTimeout(
+                finish,
+                10000
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CLEANUP
+========================================================= */
+
+function cleanupConnection(
+    remoteID
+){
+
+    const item =
+        connections[
+            remoteID
+        ];
+
+
+    if(!item){
+
+        return;
+    }
+
+
+    try{
+
+        if(
+            item.channel
+        ){
+
+            item.channel.close();
+
+        }
+
+    }catch(e){}
+
+
+    try{
+
+        if(
+            item.pc
+        ){
+
+            item.pc.close();
+
+        }
+
+    }catch(e){}
+
+
+    delete connections[
+        remoteID
+    ];
+
+
+    updateMainStatus();
+
+    renderOnlineUsers();
+
+    updateChatHeader();
+
+    savePeers();
+
+}
+
+
+/* =========================================================
+   OPEN CHAT
+========================================================= */
+
+function openChat(
+    remoteID
+){
+
+    activeChatUser =
+        remoteID;
+
+
+    document.getElementById(
+        "userList"
+    ).style.display =
+        "none";
+
+
+    document.getElementById(
+        "chat"
+    ).style.display =
+        "flex";
+
+
+    document.getElementById(
+        "chatUserID"
+    ).textContent =
+        remoteID;
+
+
+    document.getElementById(
+        "chatAvatar"
+    ).textContent =
+        remoteID.substring(
+            0,
+            1
+        );
+
+
+    restorePrivateChat(
+        remoteID
+    );
+
+
+    updateChatHeader();
+
+
+    setTimeout(
+        function(){
+
+            document.getElementById(
+                "chatInput"
+            ).focus();
+
+        },
+        100
+    );
+
+}
+
+
+/* =========================================================
+   CLOSE CHAT
+========================================================= */
+
+function closeChat(){
+
+    activeChatUser =
+        null;
+
+
+    document.getElementById(
+        "chat"
+    ).style.display =
+        "none";
+
+
+    document.getElementById(
+        "userList"
+    ).style.display =
+        "block";
+
+
+    renderOnlineUsers();
+
+}
+
+
+/* =========================================================
+   CHAT HEADER
+========================================================= */
+
+function updateChatHeader(){
+
+    if(!activeChatUser){
+
+        return;
+    }
+
+
+    const remoteID =
+        activeChatUser;
+
+
+    const status =
+        document.getElementById(
+            "chatUserStatus"
+        );
+
+
+    if(
+        isConnected(
+            remoteID
+        )
+    ){
+
+        status.textContent =
+            "✓✓ Terhubung P2P";
+
+    }else if(
+        isNegotiating(
+            remoteID
+        )
+    ){
+
+        status.textContent =
+            "⟳ Menghubungkan...";
+
+    }else{
+
+        status.textContent =
+            "● Online";
+
+    }
+
+}
+
+
+/* =========================================================
+   SEND CHAT
+========================================================= */
+
+function sendChat(){
+
+    const input =
+        document.getElementById(
+            "chatInput"
+        );
+
+
+    const text =
+        input.value.trim();
+
+
+    if(!text){
+
+        return;
+    }
+
+
+    if(!activeChatUser){
+
+        return;
+    }
+
+
+    const remoteID =
+        activeChatUser;
+
+
+    const connection =
+        connections[
+            remoteID
+        ];
+
+
+    if(
+        !connection ||
+        !connection.channel ||
+        connection.channel.readyState !==
+        "open"
+    ){
+
+        updateChatHeader();
+
+        return;
+    }
+
+
+    const message = {
+
+        id:
+            crypto.randomUUID(),
+
+        from:
+            myID,
+
+        to:
+            remoteID,
+
+        text:
+            text,
+
+        time:
+            Date.now(),
+
+        status:
+            "sent"
+
+    };
+
+
+    try{
+
+        connection.channel.send(
+            JSON.stringify(
+                message
+            )
+        );
+
+
+        displayChat(
+            message,
+            true
+        );
+
+
+        saveChatMessage(
+            message
+        );
+
+
+        input.value =
+            "";
+
+
+    }catch(error){
+
+        console.error(
+            error
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   RECEIVE CHAT
+========================================================= */
+
+function receiveChat(
+    remoteID,
+    data
+){
+
+    try{
+
+        const message =
+            JSON.parse(
+                data
+            );
+
+
+        /*
+            DELIVERY ACK
+        */
+
+        if(
+            message.type ===
+            "delivered"
+        ){
+
+            updateMessageStatus(
+                message.messageId,
+                "delivered"
+            );
+
+            return;
+        }
+
+
+        /*
+            Pesan biasa.
+        */
+
+        message.from =
+            message.from ||
+            remoteID;
+
+
+        message.to =
+            myID;
+
+
+        message.status =
+            "received";
+
+
+        saveChatMessage(
+            message
+        );
+
+
+        /*
+            Kirim konfirmasi delivery.
+        */
+
+        const connection =
+            connections[
+                remoteID
+            ];
+
+
+        if(
+            connection &&
+            connection.channel &&
+            connection.channel.readyState ===
+            "open"
+        ){
+
+            try{
+
+                connection.channel.send(
+                    JSON.stringify({
+
+                        type:
+                            "delivered",
+
+                        messageId:
+                            message.id,
+
+                        from:
+                            myID
+
+                    })
+                );
+
+            }catch(e){}
+
+        }
+
+
+        if(
+            activeChatUser ===
+            remoteID
+        ){
+
+            displayChat(
+                message,
+                false
+            );
+
+        }
+
+
+    }catch(error){
+
+        console.error(
+            "Pesan tidak valid:",
+            error
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   DISPLAY CHAT
+========================================================= */
+
+function displayChat(
+    message,
+    mine
+){
+
+    const box =
+        document.getElementById(
+            "chatBox"
+        );
+
+
+    /*
+        Hindari pesan ganda.
+    */
+
+    if(
+        document.querySelector(
+            '[data-message-id="' +
+            CSS.escape(
+                message.id
+            ) +
+            '"]'
+        )
+    ){
+
+        return;
+    }
+
+
+    const row =
+        document.createElement(
+            "div"
+        );
+
+
+    row.className =
+        "message " +
+        (
+            mine
+                ? "me"
+                : "other"
+        );
+
+
+    row.dataset.messageId =
+        message.id;
+
+
+    const time =
+        message.time
+            ? new Date(
+                message.time
+              ).toLocaleTimeString(
+                "id-ID",
+                {
+                    hour:"2-digit",
+                    minute:"2-digit"
+                }
+              )
+            : "";
+
+
+    let checks = "";
+
+
+    if(mine){
+
+        checks =
+            message.status ===
+            "delivered"
+
+                ? "✓✓"
+
+                : "✓";
+
+    }
+
+
+    row.innerHTML =
+        `
+        <div class="message-text">
+            ${escapeHTML(
+                message.text || ""
+            )}
+        </div>
+
+        <div class="message-info">
+
+            ${time}
+
+            ${
+                mine
+                    ?
+                    `<span class="message-check">
+                        ${checks}
+                    </span>`
+                    :
+                    ""
+            }
+
+        </div>
+        `;
+
+
+    box.appendChild(
+        row
+    );
+
+
+    box.scrollTop =
+        box.scrollHeight;
+
+}
+
+
+/* =========================================================
+   UPDATE MESSAGE STATUS
+========================================================= */
+
+function updateMessageStatus(
+    messageId,
+    status
+){
+
+    let data =
+        loadChatData();
+
+
+    let changed = false;
+
+
+    data.forEach(
+        message => {
+
+            if(
+                message.id ===
+                messageId
+            ){
+
+                message.status =
+                    status;
+
+                changed = true;
+
+            }
+
+        }
+    );
+
+
+    if(changed){
+
+        localStorage.setItem(
+            CHAT_KEY,
+            JSON.stringify(
+                data
+            )
+        );
+
+    }
+
+
+    const row =
+        document.querySelector(
+            '[data-message-id="' +
+            CSS.escape(
+                messageId
+            ) +
+            '"]'
+        );
+
+
+    if(!row){
+
+        return;
+    }
+
+
+    const check =
+        row.querySelector(
+            ".message-check"
+        );
+
+
+    if(check){
+
+        check.textContent =
+            status === "delivered"
+                ? "✓✓"
+                : "✓";
+
+    }
+
+}
+
+
+/* =========================================================
+   LOAD CHAT
+========================================================= */
+
+function loadChatData(){
+
+    try{
+
+        return JSON.parse(
+            localStorage.getItem(
+                CHAT_KEY
+            ) || "[]"
+        );
+
+    }catch(e){
+
+        return [];
+
+    }
+
+}
+
+
+/* =========================================================
+   SAVE CHAT
+========================================================= */
+
+function saveChatMessage(
+    message
+){
+
+    const data =
+        loadChatData();
+
+
+    /*
+        Jangan simpan duplicate.
+    */
+
+    if(
+        data.some(
+            item =>
+                item.id ===
+                message.id
+        )
+    ){
+
+        return;
+    }
+
+
+    data.push(
+        message
+    );
+
+
+    if(
+        data.length > 500
+    ){
+
+        data.splice(
+            0,
+            data.length - 500
+        );
+
+    }
+
+
+    localStorage.setItem(
+        CHAT_KEY,
+        JSON.stringify(
+            data
+        )
+    );
+
+}
+
+
+/* =========================================================
+   RESTORE PRIVATE CHAT
+========================================================= */
+
+function restorePrivateChat(
+    remoteID
+){
+
+    const box =
+        document.getElementById(
+            "chatBox"
+        );
+
+
+    box.innerHTML =
+        "";
+
+
+    const data =
+        loadChatData();
+
+
+    data.forEach(
+        message => {
+
+            const belongs =
+                (
+                    message.from ===
+                    myID &&
+                    message.to ===
+                    remoteID
+                )
+                ||
+                (
+                    message.from ===
+                    remoteID &&
+                    message.to ===
+                    myID
+                );
+
+
+            if(!belongs){
+
+                return;
+            }
+
+
+            displayChat(
+                message,
+                message.from ===
+                myID
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   SAVE PEERS
+========================================================= */
+
+function savePeers(){
+
+    const peers =
+        Object.keys(
+            connections
+        ).filter(
+            id =>
+                isConnected(id)
+        );
+
+
+    localStorage.setItem(
+        PEERS_KEY,
+        JSON.stringify(
+            peers
+        )
+    );
+
+}
+
+
+/* =========================================================
+   COPY ID
+========================================================= */
+
+async function copyID(){
+
+    try{
+
+        await navigator.clipboard.writeText(
+            myID
+        );
+
+
+    }catch(error){
+
+        const textarea =
+            document.createElement(
+                "textarea"
+            );
+
+
+        textarea.value =
+            myID;
+
+
+        document.body.appendChild(
+            textarea
+        );
+
+
+        textarea.select();
+
+
+        try{
+
+            document.execCommand(
+                "copy"
+            );
+
+        }catch(e){}
+
+
+        textarea.remove();
+
+    }
+
+}
+
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+
+function openSettings(){
+
+    document.getElementById(
+        "settings"
+    ).style.display =
+        "flex";
+
+}
+
+
+function closeSettings(
+    event
+){
+
+    if(
+        event &&
+        event.target !==
+        event.currentTarget
+    ){
+
+        return;
+    }
+
+
+    document.getElementById(
+        "settings"
+    ).style.display =
+        "none";
+
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+async function resetData(){
+
+    const ok =
+        confirm(
+            "Reset data dan membuat ID baru?"
+        );
+
+
+    if(!ok){
+
+        return;
+    }
+
+
+    Object.keys(
+        connections
+    ).forEach(
+        remoteID => {
+
+            try{
+
+                connections[
+                    remoteID
+                ].pc.close();
+
+            }catch(e){}
+
+        }
+    );
+
+
+    connections = {};
+
+    pendingConnections = {};
+
+    knownSignals = {};
+
+    incomingRequests = {};
+
+    processingSignals = {};
+
+    pairStates = {};
+
+    autoRequestTimes = {};
+
+    retryCounts = {};
+
+
+    Object.keys(
+        retryTimers
+    ).forEach(
+        id => {
+
+            clearTimeout(
+                retryTimers[id]
+            );
+
+        }
+    );
+
+
+    retryTimers = {};
+
+
+    localStorage.removeItem(
+        MY_ID_KEY
+    );
+
+
+    localStorage.removeItem(
+        PEERS_KEY
+    );
+
+
+    localStorage.removeItem(
+        CHAT_KEY
+    );
+
+
+    myID =
+        crypto.randomUUID()
+            .replace(/-/g,"")
+            .substring(0,6)
+            .toUpperCase();
+
+
+    localStorage.setItem(
+        MY_ID_KEY,
+        myID
+    );
+
+
+    document.getElementById(
+        "myID"
+    ).textContent =
+        myID;
+
+
+    document.getElementById(
+        "settingsID"
+    ).textContent =
+        myID;
+
+
+    activeChatUser =
+        null;
+
+
+    document.getElementById(
+        "chat"
+    ).style.display =
+        "none";
+
+
+    document.getElementById(
+        "userList"
+    ).style.display =
+        "block";
+
+
+    heartbeatLogged =
+        false;
+
+
+    closeSettings();
+
+
+    await sendHeartbeat();
+
+    await loadOnlineUsers();
+
+    renderOnlineUsers();
+
+}
+
+
+/* =========================================================
+   OFFLINE
+========================================================= */
+
+function sendOffline(){
+
+    try{
+
+        navigator.sendBeacon(
+
+            GAS_URL,
+
+            new Blob(
+
+                [
+                    JSON.stringify({
+
+                        action:
+                            "offline",
+
+                        id:
+                            myID
+
+                    })
+                ],
+
+                {
+                    type:
+                        "text/plain;charset=utf-8"
+                }
+
+            )
+
+        );
+
+    }catch(e){}
+
+}
+
+
+window.addEventListener(
+    "beforeunload",
+    function(){
+
+        sendOffline();
+
+    }
+);
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHTML(
+    text
+){
+
+    return String(
+        text
+    )
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+    .replace(
+        /</g,
+        "&lt;"
+    )
+    .replace(
+        />/g,
+        "&gt;"
+    )
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+    .replace(
+        /'/g,
+        "&#039;"
+    );
+
+}
+
+
+/* =========================================================
+   ENTER SEND
+========================================================= */
+
+document.getElementById(
+    "chatInput"
+).addEventListener(
+    "keydown",
+    function(event){
+
+        if(
+            event.key ===
+            "Enter"
+        ){
+
+            event.preventDefault();
+
+            sendChat();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   START
+========================================================= */
+
+async function start(){
+
+    if(
+        !GAS_URL ||
+        GAS_URL.includes(
+            "MASUKKAN_URL"
+        )
+    ){
+
+        showStatus(
+            "⚠️ URL GAS belum diatur."
+        );
+
+        return;
+    }
+
+
+    showStatus(
+        "🔄 Menghubungkan ke server..."
+    );
+
+
+    await sendHeartbeat();
+
+
+    await loadOnlineUsers();
+
+
+    await pollSignals();
+
+
+    setInterval(
+        sendHeartbeat,
+        HEARTBEAT_INTERVAL
+    );
+
+
+    setInterval(
+        loadOnlineUsers,
+        ONLINE_INTERVAL
+    );
+
+
+    setInterval(
+        pollSignals,
+        SIGNAL_INTERVAL
+    );
+
+
+    showStatus(
+        "🟢 Online • " +
+        myID
+    );
+
+
+    /*
+        Beri waktu sebentar setelah
+        heartbeat pertama sebelum
+        memulai koneksi otomatis.
+    */
+
+    setTimeout(
+        autoConnectMissingUsers,
+        1000
+    );
+
+}
+
+
+/* =========================================================
+   START APP
+========================================================= */
+
+start();
+
+</script>
+
+</body>
+</html>
